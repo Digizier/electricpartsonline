@@ -153,6 +153,9 @@ export interface GeneralSettings {
   mapUrl: string;
   description: string;
   announcement: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  facebookUrl?: string;
 }
 
 export interface ShippingSettings {

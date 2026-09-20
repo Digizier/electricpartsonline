@@ -216,6 +216,60 @@ export default function AdminSettingsPage() {
                 className="w-full bg-slate-900 border border-slate-800 text-white px-3 py-2 rounded-xl focus:ring-1 focus:ring-orange-500 font-semibold"
               />
             </div>
+
+            {/* Social Media Links */}
+            <div className="pt-2 border-t border-slate-800/80">
+              <label className="block font-bold text-slate-200 mb-3 text-sm flex items-center gap-2">
+                <span>Official Social Media Accounts</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block font-semibold text-slate-400 mb-1">Instagram URL</label>
+                  <input
+                    type="url"
+                    value={settings.general.instagramUrl || ''}
+                    placeholder="https://www.instagram.com/..."
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        general: { ...settings.general, instagramUrl: e.target.value },
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 text-white px-3 py-2 rounded-xl focus:ring-1 focus:ring-orange-500 font-mono text-[11px]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-400 mb-1">TikTok URL</label>
+                  <input
+                    type="url"
+                    value={settings.general.tiktokUrl || ''}
+                    placeholder="https://www.tiktok.com/@..."
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        general: { ...settings.general, tiktokUrl: e.target.value },
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 text-white px-3 py-2 rounded-xl focus:ring-1 focus:ring-orange-500 font-mono text-[11px]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-400 mb-1">Facebook URL</label>
+                  <input
+                    type="url"
+                    value={settings.general.facebookUrl || ''}
+                    placeholder="https://www.facebook.com/..."
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        general: { ...settings.general, facebookUrl: e.target.value },
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 text-white px-3 py-2 rounded-xl focus:ring-1 focus:ring-orange-500 font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

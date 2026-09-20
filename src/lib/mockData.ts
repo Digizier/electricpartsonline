@@ -11,7 +11,10 @@ export const INITIAL_SETTINGS: SiteSettings = {
     address: 'Usman Traders, Commercial Equipment Parts Market',
     mapUrl: 'https://maps.app.goo.gl/QA89GdbJBnTMPgou7',
     description: 'Electrical, Plumbing, Hardware & Kitchen Parts — your one-stop shop for quality commercial fittings, fixtures, and supplies.',
-    announcement: 'FAST COMMERCIAL DISPATCH • GENUINE OEM REPLACEMENT PARTS • 100% QUALITY GUARANTEED'
+    announcement: 'FAST COMMERCIAL DISPATCH • GENUINE OEM REPLACEMENT PARTS • 100% QUALITY GUARANTEED',
+    instagramUrl: 'https://www.instagram.com/usmantraders.electric?stkn=MWNlaGlpaGwwYWFvMA==',
+    tiktokUrl: 'https://www.tiktok.com/@usmantraders_electric?_r=1&_t=ZS-99t6QIpYkjI',
+    facebookUrl: 'https://www.facebook.com/share/18dJmrRRcu/',
   },
   shipping: {
     freeShippingThreshold: 5000,
