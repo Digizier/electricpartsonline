@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getAllCoupons, saveCoupon, deleteCoupon } from '@/lib/db';
 import { Coupon } from '@/types';
 import { formatCurrency } from '@/lib/utils';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Ticket, Plus, Trash2, Edit2, CheckCircle2, X, Tag } from 'lucide-react';
 
 export default function AdminCouponsPage() {
@@ -12,6 +13,8 @@ export default function AdminCouponsPage() {
   const [editingCoupon, setEditingCoupon] = useState<Partial<Coupon> | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadCoupons = async () => {
     const data = await getAllCoupons();
@@ -82,15 +85,19 @@ export default function AdminCouponsPage() {
     }
   };
 
-  const handleDelete = async (id: string, code: string) => {
-    if (!confirm(`Are you sure you want to delete coupon "${code}"?`)) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await deleteCoupon(id);
-      showNotice(`Coupon "${code}" removed.`);
+      await deleteCoupon(deleteTarget.id);
+      showNotice(`Coupon "${deleteTarget.code}" removed.`);
+      setDeleteTarget(null);
       loadCoupons();
     } catch (err) {
       console.error('Delete coupon error:', err);
       showNotice('Failed to delete coupon.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -166,7 +173,7 @@ export default function AdminCouponsPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleDelete(c.id, c.code)}
+                  onClick={() => setDeleteTarget(c)}
                   className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-900 border border-slate-800"
                   title="Delete Coupon"
                 >
@@ -293,6 +300,17 @@ export default function AdminCouponsPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Coupon Voucher"
+        itemName={deleteTarget ? `Coupon Code: ${deleteTarget.code}` : ''}
+        message="Are you sure you want to delete this coupon code? Customers will no longer be able to use it for discounts at checkout."
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

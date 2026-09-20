@@ -49,6 +49,57 @@ export default function AdminDashboardPage() {
 
   const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
   const activeProductsCount = products.filter((p) => p.is_active).length;
+  const avgOrderValue = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
+
+  const uniqueCustomers = React.useMemo(() => {
+    const customerKeys = orders
+      .map((o) => (o.customer_phone || o.customer_email || o.customer_name || '').trim().toLowerCase())
+      .filter(Boolean);
+    return new Set(customerKeys).size || orders.length;
+  }, [orders]);
+
+  // Compute 7-day sales breakdown dynamically from real orders in PKR
+  const salesMetrics = React.useMemo(() => {
+    const dayBuckets: { key: string; label: string; revenue: number; ordersCount: number }[] = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      dayBuckets.push({ key, label, revenue: 0, ordersCount: 0 });
+    }
+
+    orders.forEach((o) => {
+      if (!o.created_at) return;
+      const oKey = new Date(o.created_at).toISOString().slice(0, 10);
+      const bucket = dayBuckets.find((b) => b.key === oKey);
+      if (bucket) {
+        bucket.revenue += Number(o.total_amount) || 0;
+        bucket.ordersCount += 1;
+      }
+    });
+
+    const maxRev = Math.max(...dayBuckets.map((b) => b.revenue), 1);
+    const maxOrd = Math.max(...dayBuckets.map((b) => b.ordersCount), 1);
+
+    let peakDay = dayBuckets[dayBuckets.length - 1]?.label || 'Today';
+    let maxDayRev = -1;
+    dayBuckets.forEach((b) => {
+      if (b.revenue > maxDayRev) {
+        maxDayRev = b.revenue;
+        peakDay = b.label;
+      }
+    });
+
+    const days = dayBuckets.map((b) => ({
+      ...b,
+      revHeight: b.revenue > 0 ? Math.max(Math.round((b.revenue / maxRev) * 88), 12) : 4,
+      ordHeight: b.ordersCount > 0 ? Math.max(Math.round((b.ordersCount / maxOrd) * 88), 12) : 4,
+    }));
+
+    return { days, peakDay };
+  }, [orders]);
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await updateOrderStatus(orderId, newStatus);
@@ -63,14 +114,14 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Dashboard</h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Welcome back, Usman Traders! Here's what's happening with your store today.
+            Welcome back, Usman Traders! Real-time commercial store metrics and sales analysis.
           </p>
         </div>
 
         {/* Date Filter Picker Badge */}
         <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 text-slate-300 text-xs font-semibold px-3 py-2 rounded-xl">
           <Calendar className="w-3.5 h-3.5 text-orange-500" />
-          <span>Last 30 Days</span>
+          <span>Last 7 Days (Live Sync)</span>
         </div>
       </div>
 
@@ -85,12 +136,12 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-white">{orders.length || 48}</span>
+            <span className="text-2xl sm:text-3xl font-black text-white">{orders.length}</span>
             <span className="flex items-center text-xs font-bold text-emerald-400">
-              <ArrowUpRight className="w-3.5 h-3.5" /> 12%
+              <ArrowUpRight className="w-3.5 h-3.5" /> 100% Live
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">vs. last 7 days</p>
+          <p className="text-[11px] text-slate-500 mt-1">Direct store purchases</p>
         </div>
 
         {/* Card 2: Total Revenue */}
@@ -103,13 +154,13 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-black text-white">
-              {formatCurrency(totalRevenue || 12460)}
+              {formatCurrency(totalRevenue)}
             </span>
             <span className="flex items-center text-xs font-bold text-emerald-400">
-              <ArrowUpRight className="w-3.5 h-3.5" /> 18%
+              <ArrowUpRight className="w-3.5 h-3.5" /> in PKR
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">vs. last 7 days</p>
+          <p className="text-[11px] text-slate-500 mt-1">Grand gross sales volume</p>
         </div>
 
         {/* Card 3: Total Customers */}
@@ -121,12 +172,12 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-white">36</span>
-            <span className="flex items-center text-xs font-bold text-emerald-400">
-              <ArrowUpRight className="w-3.5 h-3.5" /> 9%
+            <span className="text-2xl sm:text-3xl font-black text-white">{uniqueCustomers}</span>
+            <span className="flex items-center text-xs font-bold text-blue-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> verified
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">vs. last 7 days</p>
+          <p className="text-[11px] text-slate-500 mt-1">Unique commercial buyers</p>
         </div>
 
         {/* Card 4: Total Products */}
@@ -139,11 +190,11 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-black text-white">
-              {products.length || 128}
+              {products.length}
             </span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            Active: <span className="text-emerald-400 font-bold">{activeProductsCount || 120}</span> | Draft: <span className="text-slate-400">8</span>
+            Active: <span className="text-emerald-400 font-bold">{activeProductsCount}</span> | Draft: <span className="text-slate-400">{products.length - activeProductsCount}</span>
           </p>
         </div>
       </div>
@@ -169,39 +220,35 @@ export default function AdminDashboardPage() {
 
           {/* Graphical Bars Representation */}
           <div className="h-56 flex items-end justify-between gap-2 pt-6 border-b border-slate-800 pb-2">
-            {[
-              { day: 'Sep 17', rev: 40, ord: 25 },
-              { day: 'Sep 18', rev: 55, ord: 35 },
-              { day: 'Sep 19', rev: 65, ord: 45 },
-              { day: 'Sep 20', rev: 50, ord: 30 },
-              { day: 'Sep 21', rev: 70, ord: 55 },
-              { day: 'Sep 22', rev: 60, ord: 40 },
-              { day: 'Sep 23', rev: 85, ord: 70 },
-              { day: 'Sep 24', rev: 95, ord: 80 },
-            ].map((d, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+            {salesMetrics.days.map((d, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative">
+                {/* Tooltip on Hover */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xl pointer-events-none whitespace-nowrap z-20">
+                  {formatCurrency(d.revenue)} • {d.ordersCount} {d.ordersCount === 1 ? 'order' : 'orders'}
+                </div>
+
                 <div className="w-full flex items-end justify-center gap-1 h-full">
                   <div
-                    className="w-3 sm:w-4 bg-blue-500/80 hover:bg-blue-400 rounded-t transition-all"
-                    style={{ height: `${d.rev}%` }}
-                    title={`Revenue: ${d.rev}%`}
+                    className="w-3 sm:w-4 bg-blue-500/80 hover:bg-blue-400 rounded-t transition-all cursor-pointer"
+                    style={{ height: `${d.revHeight}%` }}
+                    title={`Revenue: ${formatCurrency(d.revenue)}`}
                   />
                   <div
-                    className="w-3 sm:w-4 bg-orange-500 hover:bg-orange-400 rounded-t transition-all"
-                    style={{ height: `${d.ord}%` }}
-                    title={`Orders: ${d.ord}%`}
+                    className="w-3 sm:w-4 bg-orange-500 hover:bg-orange-400 rounded-t transition-all cursor-pointer"
+                    style={{ height: `${d.ordHeight}%` }}
+                    title={`Orders: ${d.ordersCount}`}
                   />
                 </div>
                 <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-                  {d.day}
+                  {d.label}
                 </span>
               </div>
             ))}
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-400 pt-3">
-            <span>Peak Day: <strong className="text-white">Sep 24</strong></span>
-            <span>Average Conversion Rate: <strong className="text-emerald-400">3.2%</strong></span>
+            <span>Peak Day: <strong className="text-white">{salesMetrics.peakDay}</strong></span>
+            <span>Avg. Order Value: <strong className="text-emerald-400">{formatCurrency(avgOrderValue)}</strong></span>
           </div>
         </div>
 
@@ -382,8 +429,8 @@ export default function AdminDashboardPage() {
 
         <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center">
           <div className="text-xs text-slate-400 font-semibold">Avg. Order Value</div>
-          <div className="text-xl font-black text-white mt-1">$259.58</div>
-          <div className="text-[10px] text-emerald-400 font-bold mt-0.5">↑ 14%</div>
+          <div className="text-xl font-black text-white mt-1">{formatCurrency(avgOrderValue)}</div>
+          <div className="text-[10px] text-emerald-400 font-bold mt-0.5">PKR Store Average</div>
         </div>
 
         <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center">

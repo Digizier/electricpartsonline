@@ -5,6 +5,7 @@ import { getBrands, saveBrand, deleteBrand } from '@/lib/db';
 import { Brand } from '@/types';
 import { slugify } from '@/lib/utils';
 import { ImageCompressorUpload } from '@/components/admin/ImageCompressorUpload';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import {
   Tag,
   Plus,
@@ -25,6 +26,8 @@ export default function AdminBrandsPage() {
   const [editingBrand, setEditingBrand] = useState<Partial<Brand> | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadBrands = async () => {
     const data = await getBrands();
@@ -95,15 +98,19 @@ export default function AdminBrandsPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete brand "${name}"?`)) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await deleteBrand(id);
-      showNotice(`Brand "${name}" removed.`);
+      await deleteBrand(deleteTarget.id);
+      showNotice(`Brand "${deleteTarget.name}" removed.`);
+      setDeleteTarget(null);
       await loadBrands();
     } catch (err) {
       console.error('Delete brand error:', err);
       showNotice('Failed to delete brand.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -271,7 +278,7 @@ export default function AdminBrandsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(brand.id, brand.name)}
+                    onClick={() => setDeleteTarget(brand)}
                     className="p-1.5 text-red-400 hover:text-red-300 bg-red-950/40 hover:bg-red-950 rounded-lg border border-red-900/60 transition-colors"
                     title="Delete Brand"
                   >
@@ -400,6 +407,17 @@ export default function AdminBrandsPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Manufacturer Brand"
+        itemName={deleteTarget?.name}
+        message="Are you sure you want to delete this manufacturer brand? It will be removed from storefront brand filters and the admin brand manager."
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

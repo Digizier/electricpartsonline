@@ -96,63 +96,6 @@ export function Footer() {
                 <span>View Google Maps Location</span>
               </a>
             </div>
-
-            {/* Social Media Channels (Col 1) */}
-            <div className="pt-2">
-              <span className="text-[11px] font-bold text-slate-300 tracking-wider uppercase block mb-2">
-                Official Social Channels
-              </span>
-              <div className="flex items-center flex-wrap gap-2.5">
-                <a
-                  href={instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center shadow-md hover:scale-110 transition-transform duration-200"
-                  aria-label="Instagram"
-                  title="Follow on Instagram"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                  </svg>
-                </a>
-                <a
-                  href={tiktokUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-black text-white border border-slate-700/80 flex items-center justify-center shadow-md hover:border-cyan-400 hover:scale-110 transition-all duration-200"
-                  aria-label="TikTok"
-                  title="Follow on TikTok"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.49 6.27 6.27 0 0 0 1.87-4.49V8.69a8.18 8.18 0 0 0 4.9 1.61V6.85a4.86 4.86 0 0 1-1-.16z"/>
-                  </svg>
-                </a>
-                <a
-                  href={facebookUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-[#1877F2] text-white flex items-center justify-center shadow-md hover:bg-[#166fe5] hover:scale-110 transition-all duration-200"
-                  aria-label="Facebook"
-                  title="Follow on Facebook"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-                <a
-                  href={`https://wa.me/${whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center shadow-md hover:bg-[#20bd5a] hover:scale-110 transition-all duration-200"
-                  aria-label="WhatsApp"
-                  title="Chat on WhatsApp"
-                >
-                  <MessageCircle className="w-4 h-4 fill-current" />
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Quick Links, Shop By Brand & Customer Service */}

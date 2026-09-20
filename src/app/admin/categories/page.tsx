@@ -5,6 +5,7 @@ import { getCategories, saveCategory, deleteCategory, saveSubcategory, deleteSub
 import { Category, Subcategory } from '@/types';
 import { slugify } from '@/lib/utils';
 import { ImageCompressorUpload } from '@/components/admin/ImageCompressorUpload';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Plus, Trash2, Edit2, FolderTree, X, CheckCircle2, CornerDownRight } from 'lucide-react';
 
 function SubcategoryNode({
@@ -20,7 +21,7 @@ function SubcategoryNode({
   level: number;
   onAddNested: (catId: string, parentSubId: string) => void;
   onEdit: (sub: Subcategory, catId: string) => void;
-  onDelete: (id: string, catId: string) => void;
+  onDelete: (sub: Subcategory, catId: string) => void;
 }) {
   const hasChildren = sub.children && sub.children.length > 0;
 
@@ -56,7 +57,7 @@ function SubcategoryNode({
           </button>
           <button
             type="button"
-            onClick={() => onDelete(sub.id, categoryId)}
+            onClick={() => onDelete(sub, categoryId)}
             className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors"
             title={`Delete ${sub.name}`}
           >
@@ -107,6 +108,13 @@ export default function AdminCategoriesPage() {
   const [editingCat, setEditingCat] = useState<Partial<Category> | null>(null);
   const [editingSub, setEditingSub] = useState<Partial<Subcategory> | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: 'category' | 'subcategory';
+    id: string;
+    name: string;
+    categoryId?: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadCategories = async () => {
     const data = await getCategories();
@@ -170,10 +178,23 @@ export default function AdminCategoriesPage() {
     setEditingCat(null);
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category and all its nested subcategories?')) return;
-    await deleteCategory(id);
-    showNotice('Category deleted.');
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      if (deleteTarget.type === 'category') {
+        await deleteCategory(deleteTarget.id);
+        showNotice(`Category "${deleteTarget.name}" deleted.`);
+      } else {
+        await deleteSubcategory(deleteTarget.id, deleteTarget.categoryId || '');
+        showNotice(`Subcategory "${deleteTarget.name}" deleted.`);
+      }
+      setDeleteTarget(null);
+    } catch (err: any) {
+      alert('Failed to delete: ' + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSaveSubcategory = async (e: React.FormEvent) => {
@@ -190,12 +211,6 @@ export default function AdminCategoriesPage() {
     setIsSubModalOpen(false);
     setEditingSub(null);
     setSelectedParentSubId(null);
-  };
-
-  const handleDeleteSubcategory = async (id: string, categoryId: string) => {
-    if (!confirm('Delete this subcategory item and any child items?')) return;
-    await deleteSubcategory(id, categoryId);
-    showNotice('Subcategory item deleted.');
   };
 
   const activeCategoryForModal = categories.find((c) => c.id === selectedCatId);
@@ -270,7 +285,7 @@ export default function AdminCategoriesPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDeleteCategory(cat.id)}
+                  onClick={() => setDeleteTarget({ type: 'category', id: cat.id, name: cat.name })}
                   className="p-1.5 text-red-400 hover:text-red-300 bg-red-950/40 rounded-lg border border-red-900"
                   title="Delete Category"
                 >
@@ -307,7 +322,7 @@ export default function AdminCategoriesPage() {
                       level={2}
                       onAddNested={(catId, parentSubId) => handleOpenAddSub(catId, parentSubId)}
                       onEdit={(subItem, catId) => handleOpenEditSub(subItem, catId)}
-                      onDelete={(id, catId) => handleDeleteSubcategory(id, catId)}
+                      onDelete={(subItem, catId) => setDeleteTarget({ type: 'subcategory', id: subItem.id, name: subItem.name, categoryId: catId })}
                     />
                   ))
                 ) : (
@@ -467,6 +482,21 @@ export default function AdminCategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title={deleteTarget?.type === 'category' ? 'Delete Parent Category' : 'Delete Subcategory Item'}
+        itemName={deleteTarget?.name}
+        message={
+          deleteTarget?.type === 'category'
+            ? 'Are you sure you want to delete this parent category and all its nested subcategories? Products assigned to this category will need to be re-assigned.'
+            : 'Are you sure you want to delete this subcategory item and any child sub-items nested beneath it?'
+        }
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

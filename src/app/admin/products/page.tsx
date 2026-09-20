@@ -5,6 +5,7 @@ import { getProducts, getCategories, getBrands, saveBrand, saveProduct, deletePr
 import { Product, Category, Brand } from '@/types';
 import { formatCurrency, slugify } from '@/lib/utils';
 import { MultipleImageCompressorUpload } from '@/components/admin/MultipleImageCompressorUpload';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Plus, Search, Edit2, Trash2, X, Check, Package, CheckCircle2, FileText, Layers, Settings2, Sliders, ListPlus, Tag } from 'lucide-react';
 
 export default function AdminProductsPage() {
@@ -17,6 +18,8 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Quick brand creation
   const [showQuickAddBrand, setShowQuickAddBrand] = useState(false);
@@ -158,10 +161,18 @@ export default function AdminProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product? This will permanently remove it from the catalog.')) return;
-    await deleteProduct(id);
-    showNotice('Product permanently deleted from database.');
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteProduct(deleteTarget.id);
+      showNotice(`Product "${deleteTarget.name}" permanently deleted.`);
+      setDeleteTarget(null);
+    } catch (err: any) {
+      alert('Failed to delete product: ' + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -309,7 +320,7 @@ export default function AdminProductsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(p.id)}
+                    onClick={() => setDeleteTarget(p)}
                     className="p-1.5 text-red-400 hover:text-red-300 bg-red-950/40 hover:bg-red-950 rounded-lg border border-red-900 transition-colors"
                     title="Delete Product"
                   >
@@ -351,7 +362,7 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(p.id)}
+                  onClick={() => setDeleteTarget(p)}
                   className="px-3 py-1.5 bg-red-950 text-red-400 rounded-lg border border-red-900 font-bold"
                 >
                   Delete
@@ -1321,6 +1332,17 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Commercial Equipment Part"
+        itemName={deleteTarget ? `${deleteTarget.name} (Part #${deleteTarget.part_number})` : ''}
+        message="Are you sure you want to delete this commercial equipment part? This will permanently remove it from your live database, catalog, and search indexes."
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

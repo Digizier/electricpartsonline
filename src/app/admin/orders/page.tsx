@@ -5,6 +5,7 @@ import { getOrders, updateOrderStatus, getSiteSettings, saveOrder, deleteOrder }
 import { Order, OrderStatus, SiteSettings } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { PrintableInvoice } from '@/components/admin/PrintableInvoice';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { ShoppingBag, Printer, Search, CheckCircle, Clock, Truck, Eye, Plus, Edit2, Trash2, X, CheckCircle2 } from 'lucide-react';
 
 function renderPaymentBadge(method?: string) {
@@ -55,6 +56,8 @@ export default function AdminOrdersPage() {
   const [editingOrder, setEditingOrder] = useState<Partial<Order> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const showNotice = (msg: string) => {
     setNotice(msg);
@@ -105,15 +108,19 @@ export default function AdminOrdersPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string, orderNum: string) => {
-    if (!confirm(`Are you sure you want to delete order ${orderNum}? This cannot be undone.`)) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await deleteOrder(id);
-      showNotice(`Order ${orderNum} deleted.`);
+      await deleteOrder(deleteTarget.id);
+      showNotice(`Order ${deleteTarget.order_number} permanently deleted.`);
+      setDeleteTarget(null);
       loadData();
     } catch (err) {
       console.error('Delete order error:', err);
       showNotice('Failed to delete order.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -278,7 +285,7 @@ export default function AdminOrdersPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(order.id, order.order_number)}
+                      onClick={() => setDeleteTarget(order)}
                       className="p-1.5 bg-red-950/50 hover:bg-red-900/80 text-red-400 hover:text-red-200 rounded-lg border border-red-900/60 transition-colors"
                       title="Delete Order"
                     >
@@ -348,7 +355,7 @@ export default function AdminOrdersPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(order.id, order.order_number)}
+                  onClick={() => setDeleteTarget(order)}
                   className="p-1.5 bg-red-950 text-red-400 rounded-lg border border-red-900"
                   title="Delete Order"
                 >
@@ -537,6 +544,17 @@ export default function AdminOrdersPage() {
           onClose={() => setSelectedInvoiceOrder(null)}
         />
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Store Order"
+        itemName={deleteTarget ? `Order ${deleteTarget.order_number} (${deleteTarget.customer_name})` : ''}
+        message="Are you sure you want to delete this order? All invoice records and dispatch history for this order will be permanently deleted from the database."
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
