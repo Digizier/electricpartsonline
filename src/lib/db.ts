@@ -776,6 +776,11 @@ export async function deleteCoupon(id: string): Promise<void> {
 // ==========================================
 // 7. HERO SLIDES
 // ==========================================
+function cleanHeroSlides(slides: HeroSlide[]): HeroSlide[] {
+  if (!Array.isArray(slides)) return [];
+  return slides.filter(s => s && s.image_url && !s.image_url.includes('images.unsplash.com'));
+}
+
 export async function getHeroSlides(): Promise<HeroSlide[]> {
   const supabase = getSupabase();
   try {
@@ -785,14 +790,14 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
-      return local.filter(s => s.is_active !== false);
+    if (!error && data && data.length > 0) {
+      setLocal('epo_hero', data);
+      return data as HeroSlide[];
     }
-    setLocal('epo_hero', data);
-    return data as HeroSlide[];
+    const local = cleanHeroSlides(getLocal<HeroSlide[]>('epo_hero', []));
+    return local.filter(s => s.is_active !== false);
   } catch (e) {
-    const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+    const local = cleanHeroSlides(getLocal<HeroSlide[]>('epo_hero', []));
     return local.filter(s => s.is_active !== false);
   }
 }
@@ -805,13 +810,13 @@ export async function getAllHeroSlides(): Promise<HeroSlide[]> {
       .select('*')
       .order('sort_order', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+    if (!error && data && data.length > 0) {
+      setLocal('epo_hero', data);
+      return data as HeroSlide[];
     }
-    setLocal('epo_hero', data);
-    return data as HeroSlide[];
+    return cleanHeroSlides(getLocal<HeroSlide[]>('epo_hero', []));
   } catch (e) {
-    return getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+    return cleanHeroSlides(getLocal<HeroSlide[]>('epo_hero', []));
   }
 }
 
@@ -836,7 +841,7 @@ export async function saveHeroSlide(slide: Partial<HeroSlide>): Promise<HeroSlid
     console.warn('Hero slide sync error:', e);
   }
 
-  const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+  const local = cleanHeroSlides(getLocal<HeroSlide[]>('epo_hero', []));
   const idx = local.findIndex(s => s.id === fullSlide.id);
   if (idx >= 0) {
     local[idx] = fullSlide;
@@ -857,7 +862,7 @@ export async function deleteHeroSlide(id: string): Promise<void> {
     console.warn('Hero slide delete error:', e);
   }
 
-  const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+  const local = cleanHeroSlides(getLocal<HeroSlide[]>('epo_hero', []));
   const filtered = local.filter(s => s.id !== id);
   setLocal('epo_hero', filtered);
   dispatchEvent('epo_hero_updated');

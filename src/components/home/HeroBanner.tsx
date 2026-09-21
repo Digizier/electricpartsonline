@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { getHeroSlides } from '@/lib/db';
 import { HeroSlide } from '@/types';
-import { INITIAL_HERO } from '@/lib/mockData';
-import { ChevronLeft, ChevronRight, ShieldCheck, Coins, Truck, Headphones } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 export function HeroBanner() {
-  const [slides, setSlides] = useState<HeroSlide[]>(INITIAL_HERO);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const touchStartXRef = useRef<number | null>(null);
 
   const loadSlides = useCallback(async () => {
@@ -22,6 +22,8 @@ export function HeroBanner() {
       }
     } catch (e) {
       console.warn('Error loading hero slides:', e);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -31,16 +33,16 @@ export function HeroBanner() {
     return () => window.removeEventListener('epo_hero_updated', loadSlides);
   }, [loadSlides]);
 
-  // Auto-rotation every 3 seconds (3000ms) unless paused by hover or interaction
+  // Auto-rotation every 3 seconds (3000ms) unless paused by hover or touch interaction
   useEffect(() => {
-    if (slides.length <= 1 || isPaused) return;
+    if (slides.length <= 1 || isPaused || isLoading) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, 3000);
 
     return () => clearInterval(timer);
-  }, [slides.length, isPaused]);
+  }, [slides.length, isPaused, isLoading]);
 
   // Bound index safely if slides array changes
   useEffect(() => {
@@ -80,11 +82,28 @@ export function HeroBanner() {
     setIsPaused(false);
   };
 
-  const activeSlide = slides[currentIndex] || slides[0];
+  // 1. Flash Loading Shimmer Skeleton (shown while fetching real Supabase slides)
+  if (isLoading && slides.length === 0) {
+    return (
+      <div className="w-full relative overflow-hidden bg-slate-950 aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px]">
+        <div className="absolute inset-0 bg-slate-900 animate-pulse flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2 text-slate-500">
+            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold tracking-wider uppercase text-slate-400">Loading Banners...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If no slides exist at all
+  if (slides.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="bg-slate-950 pb-5">
-      {/* Hero Banner Image Carousel */}
+    <div className="w-full relative bg-slate-950">
+      {/* 100% Full-Width Responsive Banner Carousel */}
       <section
         className="relative w-full overflow-hidden select-none bg-slate-950 group"
         onMouseEnter={() => setIsPaused(true)}
@@ -93,10 +112,11 @@ export function HeroBanner() {
         onTouchEnd={handleTouchEnd}
         aria-label="Promotional Hero Banners"
       >
-        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[21/7] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] max-h-[520px]">
+        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px]">
           {slides.map((slide, idx) => {
             const isActive = idx === currentIndex;
             const linkHref = slide.cta_link && slide.cta_link.trim() ? slide.cta_link : '/products/';
+            const buttonText = slide.cta_text && slide.cta_text.trim() ? slide.cta_text : 'Shop Now';
 
             return (
               <div
@@ -105,21 +125,34 @@ export function HeroBanner() {
                   isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                 }`}
               >
+                {/* Full-image Clickable Link */}
                 <Link
                   href={linkHref}
                   prefetch={false}
-                  className="block w-full h-full relative"
+                  className="block w-full h-full relative cursor-pointer"
                   tabIndex={isActive ? 0 : -1}
                 >
                   <img
-                    src={slide.image_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1920&q=85'}
+                    src={slide.image_url}
                     alt={slide.title || 'Usman Traders Commercial Parts'}
                     className="w-full h-full object-cover object-center"
                     loading={idx === 0 ? 'eager' : 'lazy'}
                   />
-                  {/* Subtle edge overlay for smooth integration */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-black/10 pointer-events-none" />
+                  {/* Subtle edge gradient for seamless blending */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
                 </Link>
+
+                {/* Visible Prominent CTA Button on the Banner */}
+                <div className="absolute bottom-4 sm:bottom-7 md:bottom-8 lg:bottom-10 left-4 sm:left-8 md:left-12 lg:left-16 z-20 pointer-events-auto">
+                  <Link
+                    href={linkHref}
+                    prefetch={false}
+                    className="inline-flex items-center gap-2 bg-[#FF6A00] hover:bg-orange-600 active:bg-orange-700 text-white font-black text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-7 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-2xl shadow-black/60 hover:shadow-orange-500/40 transition-all transform hover:-translate-y-0.5 border border-white/20"
+                  >
+                    <span>{buttonText}</span>
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                  </Link>
+                </div>
               </div>
             );
           })}
@@ -168,55 +201,6 @@ export function HeroBanner() {
           )}
         </div>
       </section>
-
-      {/* 4 Value Proposition Badges Underneath Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 sm:mt-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
-          {/* Card 1: Genuine Parts */}
-          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div className="leading-tight overflow-hidden">
-              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Genuine Parts</div>
-              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">100% OEM Compatibility</div>
-            </div>
-          </div>
-
-          {/* Card 2: Competitive Prices */}
-          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-              <Coins className="w-5 h-5" />
-            </div>
-            <div className="leading-tight overflow-hidden">
-              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Competitive Prices</div>
-              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">Direct Wholesale Rates</div>
-            </div>
-          </div>
-
-          {/* Card 3: Fast Shipping */}
-          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div className="leading-tight overflow-hidden">
-              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Fast Shipping</div>
-              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">Quick Daily Dispatch</div>
-            </div>
-          </div>
-
-          {/* Card 4: Expert Support */}
-          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-              <Headphones className="w-5 h-5" />
-            </div>
-            <div className="leading-tight overflow-hidden">
-              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Expert Support</div>
-              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">Dedicated Part Help</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

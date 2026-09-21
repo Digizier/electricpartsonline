@@ -250,8 +250,10 @@ export default function AdminHomepageBuilderPage() {
                       <span>Link: {slide.cta_link || '/products/'}</span>
                     </div>
 
-                    <div className="text-[11px] text-slate-500">
-                      Sort Order: {slide.sort_order ?? index + 1}
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                      <span>Button: <strong className="text-orange-400 font-semibold">{slide.cta_text || 'Shop Now'}</strong></span>
+                      <span>•</span>
+                      <span>Sort Order: {slide.sort_order ?? index + 1}</span>
                     </div>
                   </div>
                 </div>
@@ -338,17 +340,38 @@ export default function AdminHomepageBuilderPage() {
                 </span>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Internal Label / Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Commercial Fryers Mega Sale"
-                  value={editingSlide.title || ''}
-                  onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 text-white px-3 py-2 rounded-xl text-xs focus:ring-1 focus:ring-orange-500 font-bold"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Button Text (CTA)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Shop Now, View Parts"
+                    value={editingSlide.cta_text || ''}
+                    onChange={(e) => setEditingSlide({ ...editingSlide, cta_text: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 text-white px-3 py-2 rounded-xl text-xs focus:ring-1 focus:ring-orange-500 font-bold"
+                  />
+                  <span className="text-[11px] text-slate-500 mt-0.5 block">
+                    Default: &ldquo;Shop Now&rdquo;
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Internal Label / Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Fryer Parts Sale"
+                    value={editingSlide.title || ''}
+                    onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 text-white px-3 py-2 rounded-xl text-xs focus:ring-1 focus:ring-orange-500 font-bold"
+                  />
+                  <span className="text-[11px] text-slate-500 mt-0.5 block">
+                    Admin reference
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
