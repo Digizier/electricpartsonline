@@ -43,15 +43,15 @@ export function AdminTopBar({ onToggleSidebar }: AdminTopBarProps) {
       {/* Right User Actions */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Notifications */}
-        <button
-          type="button"
-          onClick={() => alert('You have 3 unfulfilled commercial orders waiting for dispatch.')}
-          className="relative p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
-          title="Notifications"
+        <Link
+          href="/admin/orders/"
+          prefetch={false}
+          className="relative p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center"
+          title="View Pending Orders"
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-        </button>
+        </Link>
 
         {/* View Website */}
         <Link

@@ -169,7 +169,7 @@ export default function AdminProductsPage() {
       showNotice(`Product "${deleteTarget.name}" permanently deleted.`);
       setDeleteTarget(null);
     } catch (err: any) {
-      alert('Failed to delete product: ' + err.message);
+      showNotice('Failed to delete product: ' + err.message);
     } finally {
       setIsDeleting(false);
     }
@@ -191,7 +191,7 @@ export default function AdminProductsPage() {
       setIsModalOpen(false);
       setEditingProduct(null);
     } catch (err: any) {
-      alert('Failed to save product: ' + err.message);
+      showNotice('Failed to save product: ' + err.message);
     } finally {
       setIsSaving(false);
     }

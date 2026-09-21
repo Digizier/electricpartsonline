@@ -44,41 +44,41 @@ export function ProductCard({ product }: ProductCardProps) {
         <Link
           href={`/product/?slug=${product.slug}`}
           prefetch={false}
-          className="text-sm sm:text-base font-bold text-slate-900 hover:text-[#FF6A00] transition-colors line-clamp-2 min-h-[2.5rem]"
+          className="text-sm sm:text-[15px] font-black text-slate-900 hover:text-[#FF6A00] transition-colors line-clamp-2 min-h-[2.75rem] leading-snug"
         >
           {product.name}
         </Link>
 
         {/* Part Number */}
-        <div className="mt-1 text-xs text-slate-500 font-medium">
-          Part #: <span className="font-semibold text-slate-700">{product.part_number}</span>
+        <div className="mt-1.5 text-xs sm:text-[13px] text-slate-600 font-medium">
+          Part #: <span className="font-bold text-slate-900">{product.part_number}</span>
         </div>
 
         {/* Pricing */}
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-lg sm:text-xl font-extrabold text-slate-950">
+          <span className="text-xl sm:text-2xl font-black text-slate-950">
             {formatCurrency(product.price)}
           </span>
           {product.msrp && product.msrp > product.price && (
-            <span className="text-xs text-slate-400 line-through">
+            <span className="text-xs sm:text-sm text-slate-400 line-through">
               {formatCurrency(product.msrp)}
             </span>
           )}
         </div>
 
         {/* Rating Stars & Reviews */}
-        <div className="mt-2 flex items-center gap-1">
+        <div className="mt-2 flex items-center gap-1.5">
           <div className="flex text-amber-400">
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-3.5 h-3.5 fill-current" />
             ))}
           </div>
-          <span className="text-xs text-slate-500 font-medium">({reviewCount})</span>
+          <span className="text-xs sm:text-[13px] text-slate-500 font-bold">({reviewCount})</span>
         </div>
 
         {/* Stock Status */}
-        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-          <CheckCircle className="w-3.5 h-3.5" />
+        <div className="mt-2 flex items-center gap-1.5 text-xs sm:text-[13px] font-bold text-emerald-600">
+          <CheckCircle className="w-4 h-4" />
           <span>In Stock</span>
         </div>
 
@@ -87,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <button
             type="button"
             onClick={() => addToCart(product, 1)}
-            className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-[#FF6A00] hover:bg-orange-600 active:bg-orange-700 text-white font-bold text-sm rounded-lg shadow-sm hover:shadow transition-all duration-150"
+            className="w-full min-h-[44px] sm:min-h-[46px] flex items-center justify-center gap-2 bg-[#FF6A00] hover:bg-orange-600 active:bg-orange-700 text-white font-black text-sm rounded-xl shadow-sm hover:shadow transition-all duration-150"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add to Cart</span>

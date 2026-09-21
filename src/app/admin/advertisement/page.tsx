@@ -19,7 +19,8 @@ export default function AdminAdvertisementPage() {
 
   const downloadFacebookCatalogCSV = () => {
     if (products.length === 0) {
-      alert('No products available to export.');
+      setNotice('No products available to export.');
+      setTimeout(() => setNotice(null), 3000);
       return;
     }
 

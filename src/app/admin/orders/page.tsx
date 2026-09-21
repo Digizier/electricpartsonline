@@ -127,7 +127,7 @@ export default function AdminOrdersPage() {
   const handleSaveOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingOrder || !editingOrder.customer_name?.trim() || !editingOrder.customer_phone?.trim()) {
-      alert('Please provide customer name and phone number.');
+      showNotice('Please provide customer name and phone number.');
       return;
     }
 

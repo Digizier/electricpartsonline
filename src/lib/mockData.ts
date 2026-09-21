@@ -753,13 +753,36 @@ export const INITIAL_COUPONS: Coupon[] = [
 export const INITIAL_HERO: HeroSlide[] = [
   {
     id: 'hero-1',
-    title: 'Quality Commercial Equipment Parts',
-    subtitle: 'Electrical | Plumbing | Hardware | Kitchen Equipment Parts',
-    badge_text: 'YOUR TRUSTED SOURCE FOR',
-    image_url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1600&q=80',
+    title: 'Usman Traders Commercial Kitchen Parts',
+    subtitle: 'Electrical | Gas | Hardware Equipment Parts',
+    badge_text: 'OEM PARTS',
+    image_url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1920&q=85',
     cta_text: 'Shop Parts',
-    cta_link: '/products',
+    cta_link: '/products/',
     sort_order: 1,
+    is_active: true
+  },
+  {
+    id: 'hero-2',
+    title: 'Commercial Fryers & Bun Toaster Spares',
+    subtitle: 'Timers, Heating Elements & Motors',
+    badge_text: 'FAST DISPATCH',
+    image_url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1920&q=85',
+    cta_text: 'Explore Spares',
+    cta_link: '/products/',
+    sort_order: 2,
+    is_active: true
+  },
+  {
+    id: 'hero-3',
+    title: 'Heavy Duty Ovens & Restaurant Equipment Parts',
+    subtitle: 'Wholesale & Retail Across Pakistan',
+    badge_text: 'BEST RATES',
+    image_url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=1920&q=85',
+    cta_text: 'View Catalog',
+    cta_link: '/products/',
+    sort_order: 3,
     is_active: true
   }
 ];
+

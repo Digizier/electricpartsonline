@@ -1,132 +1,222 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { getHeroSlides } from '@/lib/db';
 import { HeroSlide } from '@/types';
-import { ArrowRight, ShieldCheck, Coins, Truck, Headphones } from 'lucide-react';
+import { INITIAL_HERO } from '@/lib/mockData';
+import { ChevronLeft, ChevronRight, ShieldCheck, Coins, Truck, Headphones } from 'lucide-react';
 
 export function HeroBanner() {
-  const [slide, setSlide] = useState<HeroSlide | null>(null);
+  const [slides, setSlides] = useState<HeroSlide[]>(INITIAL_HERO);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartXRef = useRef<number | null>(null);
 
-  const loadSlide = async () => {
-    const slides = await getHeroSlides();
-    if (slides && slides.length > 0) {
-      const active = slides.find((s) => s.is_active) || slides[0];
-      setSlide(active);
+  const loadSlides = useCallback(async () => {
+    try {
+      const res = await getHeroSlides();
+      if (res && res.length > 0) {
+        const active = res.filter((s) => s.is_active !== false);
+        setSlides(active.length > 0 ? active : res);
+      }
+    } catch (e) {
+      console.warn('Error loading hero slides:', e);
     }
-  };
-
-  useEffect(() => {
-    loadSlide();
-    window.addEventListener('epo_hero_updated', loadSlide);
-    return () => window.removeEventListener('epo_hero_updated', loadSlide);
   }, []);
 
-  const badgeText = slide?.badge_text || 'YOUR TRUSTED SOURCE FOR';
-  const title = slide?.title || 'Quality Commercial Equipment Parts';
-  const subtitle = slide?.subtitle || 'Electrical | Plumbing | Hardware | Kitchen Equipment Parts';
-  const imageUrl = slide?.image_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1600&q=80';
-  const ctaText = slide?.cta_text || 'Shop Parts';
-  const ctaLink = slide?.cta_link || '/products/';
+  useEffect(() => {
+    loadSlides();
+    window.addEventListener('epo_hero_updated', loadSlides);
+    return () => window.removeEventListener('epo_hero_updated', loadSlides);
+  }, [loadSlides]);
+
+  // Auto-rotation every 3 seconds (3000ms) unless paused by hover or interaction
+  useEffect(() => {
+    if (slides.length <= 1 || isPaused) return;
+
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [slides.length, isPaused]);
+
+  // Bound index safely if slides array changes
+  useEffect(() => {
+    if (currentIndex >= slides.length && slides.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [slides.length, currentIndex]);
+
+  const goToPrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
+  };
+
+  // Touch Swipe Handlers for Mobile Devices
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartXRef.current - touchEndX;
+
+    if (diff > 45) {
+      // Swiped Left -> Next Slide
+      goToNext();
+    } else if (diff < -45) {
+      // Swiped Right -> Previous Slide
+      goToPrev();
+    }
+
+    touchStartXRef.current = null;
+    setIsPaused(false);
+  };
+
+  const activeSlide = slides[currentIndex] || slides[0];
 
   return (
-    <section className="relative bg-slate-950 text-white overflow-hidden">
-      {/* Background Image with Dark Vignette Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={imageUrl}
-          alt="Commercial Kitchen Parts"
-          className="w-full h-full object-cover object-center opacity-25 transition-all duration-700"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
-      </div>
+    <div className="bg-slate-950 pb-5">
+      {/* Hero Banner Image Carousel */}
+      <section
+        className="relative w-full overflow-hidden select-none bg-slate-950 group"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        aria-label="Promotional Hero Banners"
+      >
+        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[21/7] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] max-h-[520px]">
+          {slides.map((slide, idx) => {
+            const isActive = idx === currentIndex;
+            const linkHref = slide.cta_link && slide.cta_link.trim() ? slide.cta_link : '/products/';
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Hero Content */}
-          <div className="lg:col-span-8 space-y-5 sm:space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-black tracking-wider uppercase">
-              {badgeText}
+            return (
+              <div
+                key={slide.id || idx}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                }`}
+              >
+                <Link
+                  href={linkHref}
+                  prefetch={false}
+                  className="block w-full h-full relative"
+                  tabIndex={isActive ? 0 : -1}
+                >
+                  <img
+                    src={slide.image_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1920&q=85'}
+                    alt={slide.title || 'Usman Traders Commercial Parts'}
+                    className="w-full h-full object-cover object-center"
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                  />
+                  {/* Subtle edge overlay for smooth integration */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-black/10 pointer-events-none" />
+                </Link>
+              </div>
+            );
+          })}
+
+          {/* Left Arrow Button */}
+          {slides.length > 1 && (
+            <button
+              type="button"
+              onClick={goToPrev}
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/70 hover:bg-orange-600 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all opacity-80 hover:opacity-100 hover:scale-105 shadow-xl"
+              aria-label="Previous Banner"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          )}
+
+          {/* Right Arrow Button */}
+          {slides.length > 1 && (
+            <button
+              type="button"
+              onClick={goToNext}
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/70 hover:bg-orange-600 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all opacity-80 hover:opacity-100 hover:scale-105 shadow-xl"
+              aria-label="Next Banner"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          )}
+
+          {/* Bottom Pagination Dots */}
+          {slides.length > 1 && (
+            <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-slate-950/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`transition-all rounded-full ${
+                    idx === currentIndex
+                      ? 'w-6 sm:w-7 h-2 bg-[#FF6A00]'
+                      : 'w-2 h-2 bg-white/50 hover:bg-white'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
             </div>
+          )}
+        </div>
+      </section>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight whitespace-pre-line">
-              {title}
-            </h1>
-
-            <p className="text-sm sm:text-base lg:text-lg text-slate-300 font-medium max-w-2xl">
-              {subtitle}
-            </p>
-
-            {/* Action Buttons matching Homa Page mockup */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2">
-              <Link
-                href={ctaLink}
-                prefetch={false}
-                className="min-h-[48px] px-8 py-3.5 bg-[#FF6A00] hover:bg-orange-600 active:bg-orange-700 text-white font-black text-sm sm:text-base rounded-full shadow-lg shadow-orange-500/30 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
-              >
-                <span>{ctaText}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <a
-                href="#shop-by-category"
-                className="min-h-[48px] px-8 py-3.5 bg-slate-900/40 hover:bg-white/10 border-2 border-white/70 hover:border-white text-white font-extrabold text-sm sm:text-base rounded-full transition-all flex items-center justify-center"
-              >
-                View Categories
-              </a>
+      {/* 4 Value Proposition Badges Underneath Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 sm:mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
+          {/* Card 1: Genuine Parts */}
+          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="leading-tight overflow-hidden">
+              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Genuine Parts</div>
+              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">100% OEM Compatibility</div>
             </div>
           </div>
 
-          {/* Right Value Propositions Pillar */}
-          <div className="lg:col-span-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-1 gap-3">
-            {/* Card 1: Genuine Parts */}
-            <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3.5 sm:p-4 rounded-xl shadow-md flex items-center gap-3 backdrop-blur-sm border border-orange-400/20">
-              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div className="leading-tight">
-                <div className="font-extrabold text-sm text-white">Genuine Parts</div>
-                <div className="text-[11px] text-orange-100 font-medium">100% OEM Compatibility</div>
-              </div>
+          {/* Card 2: Competitive Prices */}
+          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
+              <Coins className="w-5 h-5" />
             </div>
-
-            {/* Card 2: Competitive Prices (Currency-neutral Coins icon) */}
-            <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3.5 sm:p-4 rounded-xl shadow-md flex items-center gap-3 backdrop-blur-sm border border-orange-400/20">
-              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-                <Coins className="w-5 h-5" />
-              </div>
-              <div className="leading-tight">
-                <div className="font-extrabold text-sm text-white">Competitive Prices</div>
-                <div className="text-[11px] text-orange-100 font-medium">Direct Wholesale Value</div>
-              </div>
+            <div className="leading-tight overflow-hidden">
+              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Competitive Prices</div>
+              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">Direct Wholesale Rates</div>
             </div>
+          </div>
 
-            {/* Card 3: Fast Shipping */}
-            <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3.5 sm:p-4 rounded-xl shadow-md flex items-center gap-3 backdrop-blur-sm border border-orange-400/20">
-              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-                <Truck className="w-5 h-5" />
-              </div>
-              <div className="leading-tight">
-                <div className="font-extrabold text-sm text-white">Fast Shipping</div>
-                <div className="text-[11px] text-orange-100 font-medium">Quick Daily Dispatch</div>
-              </div>
+          {/* Card 3: Fast Shipping */}
+          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
+              <Truck className="w-5 h-5" />
             </div>
+            <div className="leading-tight overflow-hidden">
+              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Fast Shipping</div>
+              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">Quick Daily Dispatch</div>
+            </div>
+          </div>
 
-            {/* Card 4: Expert Support */}
-            <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3.5 sm:p-4 rounded-xl shadow-md flex items-center gap-3 backdrop-blur-sm border border-orange-400/20">
-              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
-                <Headphones className="w-5 h-5" />
-              </div>
-              <div className="leading-tight">
-                <div className="font-extrabold text-sm text-white">Expert Support</div>
-                <div className="text-[11px] text-orange-100 font-medium">Dedicated Part Specialists</div>
-              </div>
+          {/* Card 4: Expert Support */}
+          <div className="bg-gradient-to-r from-orange-600/90 to-amber-600/90 p-3 sm:p-3.5 rounded-xl shadow flex items-center gap-2.5 sm:gap-3 border border-orange-400/30">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center text-white flex-shrink-0">
+              <Headphones className="w-5 h-5" />
+            </div>
+            <div className="leading-tight overflow-hidden">
+              <div className="font-extrabold text-xs sm:text-sm text-white truncate">Expert Support</div>
+              <div className="text-[10px] sm:text-xs text-orange-100 font-medium truncate">Dedicated Part Help</div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
-

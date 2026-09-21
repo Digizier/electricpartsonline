@@ -27,8 +27,8 @@ export function MainHeader({ onToggleMobileNav, isMobileNavOpen }: MainHeaderPro
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
         <div className="flex items-center justify-between gap-3 sm:gap-6">
-          {/* Mobile Menu Button + Logo */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Menu Button + Logo (Centered above Category Column on Desktop) */}
+          <div className="flex items-center gap-2 sm:gap-3 lg:w-60 xl:w-64 lg:justify-center flex-shrink-0">
             <button
               type="button"
               onClick={onToggleMobileNav}

@@ -191,7 +191,7 @@ export default function AdminCategoriesPage() {
       }
       setDeleteTarget(null);
     } catch (err: any) {
-      alert('Failed to delete: ' + err.message);
+      showNotice('Failed to delete: ' + err.message);
     } finally {
       setIsDeleting(false);
     }

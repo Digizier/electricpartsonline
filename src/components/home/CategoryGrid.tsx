@@ -51,11 +51,11 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               </div>
 
               {/* Bottom Action Button */}
-              <div className="p-3 bg-slate-900 group-hover:bg-[#FF6A00] transition-colors flex items-center justify-between text-white">
-                <span className="font-extrabold text-xs sm:text-sm truncate">
+              <div className="p-3.5 sm:p-4 bg-slate-900 group-hover:bg-[#FF6A00] transition-colors flex items-center justify-between text-white">
+                <span className="font-black text-xs sm:text-sm md:text-base truncate">
                   {cat.name}
                 </span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform flex-shrink-0 ml-1" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-1.5 transition-transform flex-shrink-0 ml-1.5" />
               </div>
             </Link>
           ))}

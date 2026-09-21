@@ -27,7 +27,8 @@ export default function AdminSettingsPage() {
       setNotice('Store settings saved and synced successfully!');
       setTimeout(() => setNotice(null), 3500);
     } catch (err: any) {
-      alert('Failed to save settings: ' + err.message);
+      setNotice('Failed to save settings: ' + err.message);
+      setTimeout(() => setNotice(null), 3500);
     } finally {
       setIsSaving(false);
     }

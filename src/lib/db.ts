@@ -786,6 +786,26 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
       .order('sort_order', { ascending: true });
 
     if (error || !data || data.length === 0) {
+      const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+      return local.filter(s => s.is_active !== false);
+    }
+    setLocal('epo_hero', data);
+    return data as HeroSlide[];
+  } catch (e) {
+    const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+    return local.filter(s => s.is_active !== false);
+  }
+}
+
+export async function getAllHeroSlides(): Promise<HeroSlide[]> {
+  const supabase = getSupabase();
+  try {
+    const { data, error } = await supabase
+      .from('hero_slides')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (error || !data || data.length === 0) {
       return getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
     }
     setLocal('epo_hero', data);
@@ -800,20 +820,20 @@ export async function saveHeroSlide(slide: Partial<HeroSlide>): Promise<HeroSlid
   const id = (slide.id && isUUID(slide.id)) ? slide.id : generateUUID();
   const fullSlide: HeroSlide = {
     id,
-    title: slide.title || 'Quality Commercial Equipment Parts',
-    subtitle: slide.subtitle || 'Electrical | Plumbing | Hardware',
-    badge_text: slide.badge_text || 'YOUR TRUSTED SOURCE FOR',
-    image_url: slide.image_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1600&q=80',
-    cta_text: slide.cta_text || 'Shop Parts',
-    cta_link: slide.cta_link || '/products',
-    sort_order: slide.sort_order || 1,
+    title: slide.title || '',
+    subtitle: slide.subtitle || '',
+    badge_text: slide.badge_text || '',
+    image_url: slide.image_url || '',
+    cta_text: slide.cta_text || 'Shop Now',
+    cta_link: slide.cta_link || '/products/',
+    sort_order: typeof slide.sort_order === 'number' ? slide.sort_order : 1,
     is_active: slide.is_active !== undefined ? slide.is_active : true,
   };
 
   try {
     await supabase.from('hero_slides').upsert(fullSlide);
   } catch (e) {
-    console.warn('Supabase hero slide error:', e);
+    console.warn('Hero slide sync error:', e);
   }
 
   const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
@@ -828,3 +848,18 @@ export async function saveHeroSlide(slide: Partial<HeroSlide>): Promise<HeroSlid
 
   return fullSlide;
 }
+
+export async function deleteHeroSlide(id: string): Promise<void> {
+  const supabase = getSupabase();
+  try {
+    await supabase.from('hero_slides').delete().eq('id', id);
+  } catch (e) {
+    console.warn('Hero slide delete error:', e);
+  }
+
+  const local = getLocal<HeroSlide[]>('epo_hero', INITIAL_HERO);
+  const filtered = local.filter(s => s.id !== id);
+  setLocal('epo_hero', filtered);
+  dispatchEvent('epo_hero_updated');
+}
+
