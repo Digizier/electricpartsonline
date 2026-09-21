@@ -1,20 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@electricpartsonline.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // If already logged in, redirect directly to admin dashboard
+    const auth = localStorage.getItem('epo_admin_auth');
+    if (auth === 'true') {
+      router.replace('/admin/');
+      return;
+    }
+    const savedEmail = localStorage.getItem('epo_admin_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, [router]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const validEmail = (email || '').trim().toLowerCase() === 'admin@electricpartsonline.com';
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const validEmail =
+      cleanEmail === 'admin@electricpartsonline.com' ||
+      cleanEmail === 'usmanmalik9866@gmail.com';
+
     const validPassword =
       password === 'admin@electricpartsonline.com@#' ||
       password === 'admin123' ||
@@ -23,10 +40,10 @@ export default function AdminLoginPage() {
 
     if (validEmail && validPassword) {
       localStorage.setItem('epo_admin_auth', 'true');
-      localStorage.setItem('epo_admin_email', email.trim());
-      router.push('/admin/');
+      localStorage.setItem('epo_admin_email', cleanEmail);
+      router.replace('/admin/');
     } else {
-      setError('Invalid admin credentials. Please enter authorized credentials.');
+      setError('Invalid admin credentials. Please enter your authorized email and password.');
     }
   };
 
