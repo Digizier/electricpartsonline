@@ -8,9 +8,10 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface FeaturedTabsProps {
   products: Product[];
+  isLoading?: boolean;
 }
 
-export function FeaturedTabs({ products }: FeaturedTabsProps) {
+export function FeaturedTabs({ products, isLoading = false }: FeaturedTabsProps) {
   const [activeTab, setActiveTab] = useState<'bestsellers' | 'new' | 'top'>('bestsellers');
 
   const filteredProducts = useMemo(() => {
@@ -86,12 +87,38 @@ export function FeaturedTabs({ products }: FeaturedTabsProps) {
           </div>
         </div>
 
-        {/* Product Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {filteredProducts.map((prod) => (
-            <ProductCard key={prod.id} product={prod} />
-          ))}
-        </div>
+        {/* Product Cards Shimmer Skeleton or Real Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 flex flex-col justify-between animate-pulse space-y-3"
+              >
+                <div className="w-full aspect-square bg-slate-100 rounded-xl" />
+                <div className="space-y-2">
+                  <div className="h-3 bg-slate-200 rounded w-16" />
+                  <div className="h-4 bg-slate-200 rounded w-full" />
+                  <div className="h-3 bg-slate-200 rounded w-3/4" />
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <div className="h-5 bg-slate-200 rounded w-20" />
+                  <div className="w-8 h-8 rounded-lg bg-slate-200" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+            <p className="text-sm font-bold text-slate-500">No active parts in this section.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {filteredProducts.map((prod) => (
+              <ProductCard key={prod.id} product={prod} />
+            ))}
+          </div>
+        )}
 
         {/* Mobile View All Link */}
         <div className="mt-6 text-center sm:hidden">

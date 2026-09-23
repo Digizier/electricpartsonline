@@ -9,33 +9,52 @@ import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { FitmentBanner } from '@/components/home/FitmentBanner';
 import { getProducts, getCategories, getBrands } from '@/lib/db';
 import { Product, Category, Brand } from '@/types';
-import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_BRANDS } from '@/lib/mockData';
 
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-  const [brands, setBrands] = useState<Brand[]>(INITIAL_BRANDS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    getProducts().then((data) => {
-      if (data && data.length > 0) setProducts(data);
-    });
-    getCategories().then((data) => {
-      if (data && data.length > 0) setCategories(data);
-    });
-    getBrands().then((data) => {
-      if (data && data.length > 0) setBrands(data);
-    });
+    let isMounted = true;
+
+    async function loadData() {
+      try {
+        const [prods, cats, brs] = await Promise.all([
+          getProducts(),
+          getCategories(),
+          getBrands(),
+        ]);
+        if (isMounted) {
+          setProducts(prods || []);
+          setCategories(cats || []);
+          setBrands(brs || []);
+        }
+      } catch (e) {
+        console.warn('Error loading homepage data:', e);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadData();
 
     const handleUpdate = () => {
-      getProducts().then(setProducts);
-      getCategories().then(setCategories);
+      getProducts().then((p) => isMounted && setProducts(p || []));
+      getCategories().then((c) => isMounted && setCategories(c || []));
+      getBrands().then((b) => isMounted && setBrands(b || []));
     };
     window.addEventListener('epo_products_updated', handleUpdate);
     window.addEventListener('epo_categories_updated', handleUpdate);
+    window.addEventListener('epo_brands_updated', handleUpdate);
     return () => {
+      isMounted = false;
       window.removeEventListener('epo_products_updated', handleUpdate);
       window.removeEventListener('epo_categories_updated', handleUpdate);
+      window.removeEventListener('epo_brands_updated', handleUpdate);
     };
   }, []);
 
@@ -45,13 +64,13 @@ export default function HomePage() {
       <HeroBanner />
 
       {/* 2. Shop By Category Grid */}
-      <CategoryGrid categories={categories} />
+      <CategoryGrid categories={categories} isLoading={isLoading} />
 
       {/* 3. Featured Products Tabs */}
-      <FeaturedTabs products={products} />
+      <FeaturedTabs products={products} isLoading={isLoading} />
 
       {/* 4. Shop By Brand */}
-      <BrandShowcase brands={brands} />
+      <BrandShowcase brands={brands} isLoading={isLoading} />
 
       {/* 5. Why Choose Us */}
       <WhyChooseUs />

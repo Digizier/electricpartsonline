@@ -11,9 +11,6 @@ import {
   OrderStatus,
 } from '@/types';
 import {
-  INITIAL_PRODUCTS,
-  INITIAL_CATEGORIES,
-  INITIAL_BRANDS,
   INITIAL_ORDERS,
   INITIAL_SETTINGS,
   INITIAL_COUPONS,
@@ -22,6 +19,22 @@ import {
 import { slugify } from './utils';
 
 const isBrowser = typeof window !== 'undefined';
+
+// Version-gate local cache to purge stale mock data from previous sessions
+if (isBrowser) {
+  try {
+    const CACHE_VERSION = 'v4_real_data';
+    if (localStorage.getItem('epo_cache_ver') !== CACHE_VERSION) {
+      localStorage.removeItem('epo_products');
+      localStorage.removeItem('epo_categories');
+      localStorage.removeItem('epo_all_subcategories');
+      localStorage.removeItem('epo_brands');
+      localStorage.setItem('epo_cache_ver', CACHE_VERSION);
+    }
+  } catch (e) {
+    // ignore
+  }
+}
 
 function getLocal<T>(key: string, fallback: T): T {
   if (!isBrowser) return fallback;
@@ -86,9 +99,8 @@ export async function getProducts(options?: {
     if (options?.limit) query = query.limit(options.limit);
 
     const { data, error } = await query;
-    if (error || !data || data.length === 0) {
-      // Fallback to local storage or initial seed
-      let local = getLocal<Product[]>('epo_products', INITIAL_PRODUCTS);
+    if (error) {
+      let local = getLocal<Product[]>('epo_products', []);
       if (options?.categoryId) local = local.filter(p => p.category_id === options.categoryId);
       if (options?.brandId) local = local.filter(p => p.brand_id === options.brandId);
       if (options?.search) {
@@ -97,11 +109,13 @@ export async function getProducts(options?: {
       }
       return local;
     }
-    // Update local cache seamlessly
-    setLocal('epo_products', data);
-    return data as Product[];
+    const result = (data || []) as Product[];
+    if (!options?.categoryId && !options?.brandId && !options?.limit) {
+      setLocal('epo_products', result);
+    }
+    return result;
   } catch (err) {
-    return getLocal<Product[]>('epo_products', INITIAL_PRODUCTS);
+    return getLocal<Product[]>('epo_products', []);
   }
 }
 
@@ -115,12 +129,12 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       .single();
 
     if (error || !data) {
-      const local = getLocal<Product[]>('epo_products', INITIAL_PRODUCTS);
+      const local = getLocal<Product[]>('epo_products', []);
       return local.find(p => p.slug === slug) || null;
     }
     return data as Product;
   } catch (err) {
-    const local = getLocal<Product[]>('epo_products', INITIAL_PRODUCTS);
+    const local = getLocal<Product[]>('epo_products', []);
     return local.find(p => p.slug === slug) || null;
   }
 }
@@ -174,7 +188,7 @@ export async function saveProduct(product: Partial<Product>): Promise<Product> {
   }
 
   // Update local cache
-  const local = getLocal<Product[]>('epo_products', INITIAL_PRODUCTS);
+  const local = getLocal<Product[]>('epo_products', []);
   const index = local.findIndex(p => p.id === fullProduct.id || p.slug === fullProduct.slug);
   if (index >= 0) {
     local[index] = fullProduct;
@@ -195,7 +209,7 @@ export async function deleteProduct(id: string): Promise<void> {
     console.warn('Supabase delete product error:', e);
   }
 
-  const local = getLocal<Product[]>('epo_products', INITIAL_PRODUCTS);
+  const local = getLocal<Product[]>('epo_products', []);
   const updated = local.filter(p => p.id !== id);
   setLocal('epo_products', updated);
   dispatchEvent('epo_products_updated');
@@ -231,14 +245,14 @@ export async function getCategories(): Promise<Category[]> {
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
-    if (catErr || !cats || cats.length === 0) {
-      return getLocal<Category[]>('epo_categories', INITIAL_CATEGORIES);
+    if (catErr) {
+      return getLocal<Category[]>('epo_categories', []);
     }
 
     const allSubs = (subs || []) as Subcategory[];
     setLocal('epo_all_subcategories', allSubs);
 
-    const merged = cats.map(c => {
+    const merged = (cats || []).map(c => {
       const catSubs = allSubs.filter(s => s.category_id === c.id);
       return {
         ...c,
@@ -249,7 +263,7 @@ export async function getCategories(): Promise<Category[]> {
     setLocal('epo_categories', merged);
     return merged as Category[];
   } catch (err) {
-    return getLocal<Category[]>('epo_categories', INITIAL_CATEGORIES);
+    return getLocal<Category[]>('epo_categories', []);
   }
 }
 
@@ -281,7 +295,7 @@ export async function saveCategory(cat: Partial<Category>): Promise<Category> {
     console.warn('Supabase category upsert fallback to local:', e);
   }
 
-  const local = getLocal<Category[]>('epo_categories', INITIAL_CATEGORIES);
+  const local = getLocal<Category[]>('epo_categories', []);
   const index = local.findIndex(c => c.id === fullCategory.id || c.slug === fullCategory.slug);
   if (index >= 0) {
     local[index] = { ...local[index], ...fullCategory };
@@ -302,7 +316,7 @@ export async function deleteCategory(id: string): Promise<void> {
     console.warn('Supabase delete category error:', e);
   }
 
-  const local = getLocal<Category[]>('epo_categories', INITIAL_CATEGORIES);
+  const local = getLocal<Category[]>('epo_categories', []);
   const updated = local.filter(c => c.id !== id);
   setLocal('epo_categories', updated);
   dispatchEvent('epo_categories_updated');
@@ -350,7 +364,7 @@ export async function saveSubcategory(sub: Partial<Subcategory>): Promise<Subcat
   setLocal('epo_all_subcategories', allFlatSubs);
 
   // Re-build category tree in local cache
-  const localCats = getLocal<Category[]>('epo_categories', INITIAL_CATEGORIES);
+  const localCats = getLocal<Category[]>('epo_categories', []);
   const updatedCats = localCats.map(c => {
     if (c.id === fullSub.category_id) {
       const catSubs = allFlatSubs.filter(s => s.category_id === c.id);
@@ -392,7 +406,7 @@ export async function deleteSubcategory(id: string, categoryId: string): Promise
   const remainingSubs = allFlatSubs.filter(s => !toDelete.has(s.id));
   setLocal('epo_all_subcategories', remainingSubs);
 
-  const localCats = getLocal<Category[]>('epo_categories', INITIAL_CATEGORIES);
+  const localCats = getLocal<Category[]>('epo_categories', []);
   const updatedCats = localCats.map(c => {
     if (c.id === categoryId) {
       const catSubs = remainingSubs.filter(s => s.category_id === c.id);
@@ -418,13 +432,14 @@ export async function getBrands(): Promise<Brand[]> {
       .select('id, name, slug, logo_url, is_featured, is_active')
       .order('name', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return getLocal<Brand[]>('epo_brands', INITIAL_BRANDS);
+    if (error) {
+      return getLocal<Brand[]>('epo_brands', []);
     }
-    setLocal('epo_brands', data);
-    return data as Brand[];
+    const result = (data || []) as Brand[];
+    setLocal('epo_brands', result);
+    return result;
   } catch (e) {
-    return getLocal<Brand[]>('epo_brands', INITIAL_BRANDS);
+    return getLocal<Brand[]>('epo_brands', []);
   }
 }
 
@@ -453,7 +468,7 @@ export async function saveBrand(brand: Partial<Brand>): Promise<Brand> {
     console.warn('Supabase save brand error:', e);
   }
 
-  const local = getLocal<Brand[]>('epo_brands', INITIAL_BRANDS);
+  const local = getLocal<Brand[]>('epo_brands', []);
   const idx = local.findIndex(b => b.id === fullBrand.id);
   if (idx >= 0) {
     local[idx] = fullBrand;
@@ -474,7 +489,7 @@ export async function deleteBrand(id: string): Promise<void> {
     console.warn('Supabase delete brand error:', e);
   }
 
-  const local = getLocal<Brand[]>('epo_brands', INITIAL_BRANDS);
+  const local = getLocal<Brand[]>('epo_brands', []);
   const updated = local.filter(b => b.id !== id);
   setLocal('epo_brands', updated);
   dispatchEvent('epo_brands_updated');

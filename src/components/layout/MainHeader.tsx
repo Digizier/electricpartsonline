@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { Logo } from '@/components/common/Logo';
+import { LiveSearch } from '@/components/common/LiveSearch';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/utils';
-import { Search, ShoppingCart, Menu, X } from 'lucide-react';
+import { ShoppingCart, Menu, X } from 'lucide-react';
 
 interface MainHeaderProps {
   onToggleMobileNav?: () => void;
@@ -13,15 +13,7 @@ interface MainHeaderProps {
 }
 
 export function MainHeader({ onToggleMobileNav, isMobileNavOpen }: MainHeaderProps) {
-  const router = useRouter();
   const { itemCount, subtotal, setIsCartOpen } = useCart();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.push(`/products/?search=${encodeURIComponent(searchQuery.trim())}`);
-  };
 
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-lg">
@@ -40,26 +32,10 @@ export function MainHeader({ onToggleMobileNav, isMobileNavOpen }: MainHeaderPro
             <Logo />
           </div>
 
-          {/* Center Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            className="flex-1 max-w-2xl hidden md:flex items-center relative"
-          >
-            <input
-              type="text"
-              placeholder="Search for parts, brands, model numbers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white text-slate-900 placeholder-slate-400 pl-4 pr-12 py-2.5 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6A00] shadow-inner"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1 bottom-1 px-4 bg-[#FF6A00] hover:bg-orange-600 text-white rounded-md flex items-center justify-center transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
+          {/* Center Live Predictive Search Bar */}
+          <div className="flex-1 max-w-2xl hidden md:flex items-center">
+            <LiveSearch placeholder="Search parts, categories, brands, OEM #..." />
+          </div>
 
           {/* Right Shopping Cart Widget */}
           <div className="flex items-center gap-3">
@@ -87,22 +63,7 @@ export function MainHeader({ onToggleMobileNav, isMobileNavOpen }: MainHeaderPro
 
         {/* Mobile Search Bar Row */}
         <div className="mt-3 md:hidden">
-          <form onSubmit={handleSearch} className="flex items-center relative">
-            <input
-              type="text"
-              placeholder="Search parts, brands, model numbers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white text-slate-900 placeholder-slate-400 pl-3 pr-10 py-2 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6A00]"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1 bottom-1 px-3 bg-[#FF6A00] text-white rounded-md flex items-center justify-center"
-              aria-label="Search"
-            >
-              <Search className="w-3.5 h-3.5" />
-            </button>
-          </form>
+          <LiveSearch isMobile placeholder="Search parts, brands, model #..." />
         </div>
       </div>
     </header>

@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { getProducts, getCategories, getBrands } from '@/lib/db';
 import { Product, Category, Brand, Subcategory } from '@/types';
 import { ProductCard } from '@/components/common/ProductCard';
-import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_BRANDS } from '@/lib/mockData';
 import { Filter, SlidersHorizontal, X, Search, RotateCcw } from 'lucide-react';
 
 function getSubcategoryAndDescendantIds(subId: string, categories: Category[]): Set<string> {
@@ -107,9 +106,10 @@ function ProductsCatalog() {
   const initialBrand = searchParams.get('brand') || '';
   const initialSearch = searchParams.get('search') || '';
 
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-  const [brands, setBrands] = useState<Brand[]>(INITIAL_BRANDS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [selectedCat, setSelectedCat] = useState<string>(initialCategory);
   const [selectedSub, setSelectedSub] = useState<string>(initialSub);
@@ -119,17 +119,36 @@ function ProductsCatalog() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   useEffect(() => {
-    const refreshData = () => {
-      getProducts().then((p) => p?.length && setProducts(p));
-      getCategories().then((c) => c?.length && setCategories(c));
-      getBrands().then((b) => b?.length && setBrands(b));
+    let isMounted = true;
+    const refreshData = async () => {
+      try {
+        const [p, c, b] = await Promise.all([
+          getProducts(),
+          getCategories(),
+          getBrands(),
+        ]);
+        if (isMounted) {
+          setProducts(p || []);
+          setCategories(c || []);
+          setBrands(b || []);
+        }
+      } catch (err) {
+        console.warn('Error refreshing catalog data:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     };
 
     refreshData();
     window.addEventListener('epo_products_updated', refreshData);
+    window.addEventListener('epo_categories_updated', refreshData);
     window.addEventListener('epo_brands_updated', refreshData);
     return () => {
+      isMounted = false;
       window.removeEventListener('epo_products_updated', refreshData);
+      window.removeEventListener('epo_categories_updated', refreshData);
       window.removeEventListener('epo_brands_updated', refreshData);
     };
   }, []);
@@ -363,7 +382,11 @@ function ProductsCatalog() {
             {activeCategoryObj ? activeCategoryObj.name : 'Commercial Equipment Parts'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Showing <strong className="text-slate-900">{filteredProducts.length}</strong> parts in catalog
+            {isLoading ? (
+              <span>Loading commercial replacement parts...</span>
+            ) : (
+              <>Showing <strong className="text-slate-900">{filteredProducts.length}</strong> parts in catalog</>
+            )}
           </p>
         </div>
 
@@ -406,7 +429,27 @@ function ProductsCatalog() {
 
         {/* Product Cards Grid (3 Cols) */}
         <div className="lg:col-span-3">
-          {filteredProducts.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between animate-pulse space-y-4"
+                >
+                  <div className="w-full aspect-square bg-slate-100 rounded-xl" />
+                  <div className="space-y-2">
+                    <div className="h-3 bg-slate-200 rounded w-20" />
+                    <div className="h-4 bg-slate-200 rounded w-full" />
+                    <div className="h-4 bg-slate-200 rounded w-2/3" />
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="h-6 bg-slate-200 rounded w-24" />
+                    <div className="w-9 h-9 rounded-xl bg-slate-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200 p-8">
               <div className="w-14 h-14 rounded-full bg-orange-100 text-[#FF6A00] flex items-center justify-center mx-auto mb-3">
                 <Search className="w-6 h-6" />

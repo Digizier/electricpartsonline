@@ -85,7 +85,7 @@ export function HeroBanner() {
   // 1. Flash Loading Shimmer Skeleton (shown while fetching real Supabase slides)
   if (isLoading && slides.length === 0) {
     return (
-      <div className="w-full relative overflow-hidden bg-slate-950 aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px]">
+      <div className="w-full relative overflow-hidden bg-slate-950 aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-auto lg:h-[46vh] lg:min-h-[320px] lg:max-h-[390px] xl:max-h-[420px] min-h-[190px] sm:min-h-[260px] md:min-h-[340px]">
         <div className="absolute inset-0 bg-slate-900 animate-pulse flex items-center justify-center">
           <div className="flex flex-col items-center gap-2 text-slate-500">
             <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -112,7 +112,7 @@ export function HeroBanner() {
         onTouchEnd={handleTouchEnd}
         aria-label="Promotional Hero Banners"
       >
-        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px]">
+        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-auto lg:h-[46vh] lg:min-h-[320px] lg:max-h-[390px] xl:max-h-[420px] min-h-[190px] sm:min-h-[260px] md:min-h-[340px]">
           {slides.map((slide, idx) => {
             const isActive = idx === currentIndex;
             const linkHref = slide.cta_link && slide.cta_link.trim() ? slide.cta_link : '/products/';
