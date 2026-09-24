@@ -64,7 +64,7 @@ export default function HomePage() {
       <HeroBanner />
 
       {/* 2. Shop By Category Grid */}
-      <CategoryGrid categories={categories} isLoading={isLoading} />
+      <CategoryGrid categories={categories} products={products} isLoading={isLoading} />
 
       {/* 3. Featured Products Tabs */}
       <FeaturedTabs products={products} isLoading={isLoading} />
