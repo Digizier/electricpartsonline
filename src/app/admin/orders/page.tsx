@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getOrders, updateOrderStatus, getSiteSettings, saveOrder, deleteOrder } from '@/lib/db';
+import { triggerOrderStatusEmail } from '@/lib/emailClient';
 import { Order, OrderStatus, SiteSettings } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { PrintableInvoice } from '@/components/admin/PrintableInvoice';
@@ -77,8 +78,16 @@ export default function AdminOrdersPage() {
   }, []);
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
+    const targetOrder = orders.find((o) => o.id === orderId);
     await updateOrderStatus(orderId, status);
     loadData();
+
+    if (targetOrder && targetOrder.customer_email && targetOrder.customer_email.includes('@')) {
+      triggerOrderStatusEmail({ ...targetOrder, status }, status);
+      showNotice(`Status updated to "${status.toUpperCase()}" & email notification sent to ${targetOrder.customer_email}`);
+    } else {
+      showNotice(`Status updated to "${status.toUpperCase()}"`);
+    }
   };
 
   const handleOpenAdd = () => {
@@ -133,10 +142,23 @@ export default function AdminOrdersPage() {
 
     setIsSaving(true);
     try {
+      const prevOrder = orders.find((o) => o.id === editingOrder.id);
       await saveOrder({
         ...editingOrder,
         total_amount: Number(editingOrder.total_amount) || Number(editingOrder.subtotal) || 0,
       });
+
+      // If status changed in modal, notify customer
+      if (
+        prevOrder &&
+        editingOrder.status &&
+        prevOrder.status !== editingOrder.status &&
+        editingOrder.customer_email &&
+        editingOrder.customer_email.includes('@')
+      ) {
+        triggerOrderStatusEmail(editingOrder as Order, editingOrder.status);
+      }
+
       showNotice(editingOrder.id ? 'Order updated successfully!' : 'New order created!');
       setIsModalOpen(false);
       setEditingOrder(null);
@@ -237,6 +259,9 @@ export default function AdminOrdersPage() {
                 <td className="py-3.5 px-4">
                   <div className="font-extrabold text-white">{order.customer_name}</div>
                   <div className="text-[11px] text-slate-400">{order.customer_phone}</div>
+                  {order.customer_email && (
+                    <div className="text-[10px] text-orange-400 truncate max-w-[170px] font-mono">{order.customer_email}</div>
+                  )}
                   <div className="text-[10px] text-slate-500">{order.shipping_address.city}</div>
                 </td>
                 <td className="py-3.5 px-4 max-w-xs">
@@ -310,6 +335,9 @@ export default function AdminOrdersPage() {
 
             <div>
               <div className="font-bold text-white">{order.customer_name} ({order.customer_phone})</div>
+              {order.customer_email && (
+                <div className="text-[11px] text-orange-400 font-mono mt-0.5">{order.customer_email}</div>
+              )}
               <div className="text-slate-400 mt-0.5">{order.shipping_address.address}, {order.shipping_address.city}</div>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <span className="text-[10px] text-slate-500 font-medium">Payment:</span>
@@ -415,7 +443,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">Customer Name *</label>
                   <input
@@ -433,6 +461,16 @@ export default function AdminOrdersPage() {
                     required
                     value={editingOrder.customer_phone || ''}
                     onChange={(e) => setEditingOrder({ ...editingOrder, customer_phone: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Customer Email</label>
+                  <input
+                    type="email"
+                    placeholder="customer@gmail.com"
+                    value={editingOrder.customer_email || ''}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, customer_email: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-orange-500"
                   />
                 </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { createOrder } from '@/lib/db';
+import { triggerNewOrderEmails } from '@/lib/emailClient';
 import { formatCurrency } from '@/lib/utils';
 import { buildCartWhatsAppLink } from '@/lib/whatsapp';
 import { Order } from '@/types';
@@ -67,21 +68,25 @@ export default function CartCheckoutPage() {
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
-    if (!customerName || !customerPhone || !address) {
+    if (!customerName?.trim() || !customerPhone?.trim() || !address?.trim()) {
       alert('Please fill in your name, phone number, and delivery address.');
+      return;
+    }
+    if (!customerEmail?.trim() || !customerEmail.includes('@')) {
+      alert('Please provide a valid email address to receive your order receipt and tracking updates.');
       return;
     }
 
     setIsSubmitting(true);
     try {
       const order = await createOrder({
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_email: customerEmail,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.trim(),
+        customer_email: customerEmail.trim(),
         shipping_address: {
-          address,
-          city,
-          notes,
+          address: address.trim(),
+          city: city.trim(),
+          notes: notes.trim(),
         },
         items: [...items],
         subtotal,
@@ -90,11 +95,15 @@ export default function CartCheckoutPage() {
         coupon_code: appliedCoupon?.code || '',
         total_amount: total,
         payment_method: paymentMethod,
-        delivery_notes: notes,
+        delivery_notes: notes.trim(),
       });
 
       setPlacedOrder(order);
       clearCart();
+
+      // Trigger automated email notifications to client (admin) and customer
+      triggerNewOrderEmails(order);
+
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
@@ -141,6 +150,9 @@ export default function CartCheckoutPage() {
 
         <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl text-left text-xs text-slate-700 space-y-2.5">
           <div>Customer: <strong className="text-slate-900">{placedOrder.customer_name}</strong> ({placedOrder.customer_phone})</div>
+          {placedOrder.customer_email && (
+            <div>Confirmation Email: <strong className="text-emerald-700 font-bold">{placedOrder.customer_email}</strong> <span className="text-slate-500 text-[11px]">(Receipt sent)</span></div>
+          )}
           <div>Delivery: <strong className="text-slate-900">{placedOrder.shipping_address?.address}, {placedOrder.shipping_address?.city}</strong></div>
           <div>Total: <strong className="text-emerald-700 text-base font-black">{formatCurrency(orderTotal)}</strong></div>
           <div>Payment Method: <strong className="text-slate-900 font-extrabold">{formatPaymentTitle(placedOrder.payment_method)}</strong></div>
@@ -244,6 +256,19 @@ export default function CartCheckoutPage() {
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   className="w-full bg-white border border-slate-300 px-3 py-2 rounded-xl text-sm focus:ring-1 focus:ring-orange-500 focus:outline-none font-medium"
                 />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Email Address (For Order Confirmation Receipt & Updates) *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. ahmed.khan@gmail.com"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="w-full bg-white border border-slate-300 px-3 py-2 rounded-xl text-sm focus:ring-1 focus:ring-orange-500 focus:outline-none font-medium"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">We will send your itemized receipt and live dispatch updates to this email address.</p>
               </div>
             </div>
 
