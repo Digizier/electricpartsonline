@@ -85,7 +85,7 @@ export function HeroBanner() {
   // 1. Flash Loading Shimmer Skeleton (shown while fetching real Supabase slides)
   if (isLoading && slides.length === 0) {
     return (
-      <div className="w-full relative overflow-hidden bg-slate-950 aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px]">
+      <div className="w-full relative overflow-hidden bg-slate-950 aspect-[3/1] sm:aspect-[3/1] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[120px] sm:min-h-[200px] md:min-h-[280px] lg:min-h-[420px]">
         <div className="absolute inset-0 bg-slate-900 animate-pulse flex items-center justify-center">
           <div className="flex flex-col items-center gap-2 text-slate-500">
             <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -112,7 +112,7 @@ export function HeroBanner() {
         onTouchEnd={handleTouchEnd}
         aria-label="Promotional Hero Banners"
       >
-        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[190px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px]">
+        <div className="relative w-full aspect-[3/1] sm:aspect-[3/1] md:aspect-[16/5] lg:aspect-[1920/600] min-h-[120px] sm:min-h-[200px] md:min-h-[280px] lg:min-h-[420px]">
           {slides.map((slide, idx) => {
             const isActive = idx === currentIndex;
             const linkHref = slide.cta_link && slide.cta_link.trim() ? slide.cta_link : '/products/';
@@ -143,38 +143,38 @@ export function HeroBanner() {
                 </Link>
 
                 {/* Visible Prominent CTA Button on the Banner */}
-                <div className="absolute bottom-4 sm:bottom-7 md:bottom-8 lg:bottom-10 left-4 sm:left-8 md:left-12 lg:left-16 z-20 pointer-events-auto">
+                <div className="absolute bottom-2 sm:bottom-6 md:bottom-8 lg:bottom-10 left-2.5 sm:left-8 md:left-12 lg:left-16 z-20 pointer-events-auto">
                   <Link
                     href={linkHref}
                     prefetch={false}
-                    className="inline-flex items-center gap-2 bg-[#FF6A00] hover:bg-orange-600 active:bg-orange-700 text-white font-black text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-7 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-2xl shadow-black/60 hover:shadow-orange-500/40 transition-all transform hover:-translate-y-0.5 border border-white/20"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#FF6A00] hover:bg-orange-600 active:bg-orange-700 text-white font-black text-[10px] sm:text-xs md:text-sm lg:text-base px-2.5 py-1 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl shadow-black/60 hover:shadow-orange-500/40 transition-all transform hover:-translate-y-0.5 border border-white/20"
                   >
                     <span>{buttonText}</span>
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                   </Link>
                 </div>
               </div>
             );
           })}
 
-          {/* Left Arrow Button */}
+          {/* Left Arrow Button (hidden on mobile to prevent obstruction, swipe & dots active) */}
           {slides.length > 1 && (
             <button
               type="button"
               onClick={goToPrev}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/70 hover:bg-orange-600 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all opacity-80 hover:opacity-100 hover:scale-105 shadow-xl"
+              className="hidden sm:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/70 hover:bg-orange-600 text-white items-center justify-center backdrop-blur-md border border-white/20 transition-all opacity-80 hover:opacity-100 hover:scale-105 shadow-xl"
               aria-label="Previous Banner"
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           )}
 
-          {/* Right Arrow Button */}
+          {/* Right Arrow Button (hidden on mobile to prevent obstruction, swipe & dots active) */}
           {slides.length > 1 && (
             <button
               type="button"
               onClick={goToNext}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/70 hover:bg-orange-600 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all opacity-80 hover:opacity-100 hover:scale-105 shadow-xl"
+              className="hidden sm:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/70 hover:bg-orange-600 text-white items-center justify-center backdrop-blur-md border border-white/20 transition-all opacity-80 hover:opacity-100 hover:scale-105 shadow-xl"
               aria-label="Next Banner"
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -183,7 +183,7 @@ export function HeroBanner() {
 
           {/* Bottom Pagination Dots */}
           {slides.length > 1 && (
-            <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-slate-950/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+            <div className="absolute bottom-1.5 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-full border border-white/10 shadow-lg">
               {slides.map((_, idx) => (
                 <button
                   key={idx}
@@ -191,8 +191,8 @@ export function HeroBanner() {
                   onClick={() => setCurrentIndex(idx)}
                   className={`transition-all rounded-full ${
                     idx === currentIndex
-                      ? 'w-6 sm:w-7 h-2 bg-[#FF6A00]'
-                      : 'w-2 h-2 bg-white/50 hover:bg-white'
+                      ? 'w-3.5 sm:w-6 h-1 sm:h-2 bg-[#FF6A00]'
+                      : 'w-1 sm:w-2 h-1 sm:h-2 bg-white/50 hover:bg-white'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
