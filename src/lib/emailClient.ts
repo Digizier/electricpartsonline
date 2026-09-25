@@ -9,7 +9,7 @@ import { Order, OrderStatus } from '@/types';
  */
 export async function triggerNewOrderEmails(order: Order): Promise<void> {
   try {
-    const res = await fetch('/api/send-email/', {
+    let res = await fetch('/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -20,9 +20,23 @@ export async function triggerNewOrderEmails(order: Order): Promise<void> {
       }),
     });
 
+    if (res.status === 404 || res.status === 405) {
+      // Retry with trailing slash in case routing requires it
+      res = await fetch('/api/send-email/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'new_order',
+          order,
+        }),
+      });
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      console.warn('triggerNewOrderEmails warning:', err);
+      console.warn('triggerNewOrderEmails response:', res.status, err);
     } else {
       console.log('Order notification emails dispatched successfully for order:', order.order_number);
     }
@@ -41,7 +55,7 @@ export async function triggerOrderStatusEmail(order: Order, newStatus: OrderStat
   }
 
   try {
-    const res = await fetch('/api/send-email/', {
+    let res = await fetch('/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -52,6 +66,20 @@ export async function triggerOrderStatusEmail(order: Order, newStatus: OrderStat
         newStatus,
       }),
     });
+
+    if (res.status === 404 || res.status === 405) {
+      res = await fetch('/api/send-email/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'order_status',
+          order,
+          newStatus,
+        }),
+      });
+    }
 
     if (res.ok) {
       console.log(`Status update email sent to ${order.customer_email} for order ${order.order_number}`);
