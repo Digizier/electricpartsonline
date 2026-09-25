@@ -7,5 +7,9 @@
   "assets": {
     "directory": "./out",
     "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "ADMIN_NOTIFICATION_EMAIL": "usmanmalik9866@gmail.com",
+    "RESEND_FROM_EMAIL": "ElectricPartsOnline <orders@noreply.electricpartsonline.com>"
   }
 }

@@ -34,6 +34,15 @@ function formatStatusLabel(status: string): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+/**
+ * Format order number to guarantee exactly one '#'
+ */
+function formatOrderNum(num?: string): string {
+  if (!num) return '#00000';
+  const clean = num.replace(/^#+/, '');
+  return `#${clean}`;
+}
+
 // =========================================================================
 // 1. ADMIN NEW ORDER NOTIFICATION (Sent to usmanmalik9866@gmail.com)
 // =========================================================================
@@ -69,7 +78,7 @@ export function buildAdminOrderEmailHtml(order: Order): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Order #${order.order_number}</title>
+  <title>New Order ${formatOrderNum(order.order_number)}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #334155;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; padding: 24px 0;">
@@ -105,7 +114,7 @@ export function buildAdminOrderEmailHtml(order: Order): string {
             <td style="padding: 24px 30px 10px 30px;">
               <div style="background-color: #fff7ed; border-left: 4px solid #FF6A00; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
                 <p style="margin: 0; font-size: 15px; font-weight: 800; color: #9a3412;">
-                  New Order Received: #${order.order_number}
+                  New Order Received: ${formatOrderNum(order.order_number)}
                 </p>
                 <p style="margin: 4px 0 0 0; font-size: 13px; color: #7c2d12;">
                   Total: <strong>${formatPKR(order.total_amount)}</strong> • Payment: <strong>${formatPaymentMethod(order.payment_method)}</strong>
@@ -274,7 +283,7 @@ export function buildAdminOrderEmailText(order: Order): string {
     .join('\n');
 
   return `
-🚨 NEW ORDER RECEIVED: #${order.order_number}
+🚨 NEW ORDER RECEIVED: ${formatOrderNum(order.order_number)}
 ==========================================
 
 Customer Details:
@@ -333,7 +342,7 @@ export function buildCustomerConfirmationEmailHtml(order: Order): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Confirmation #${order.order_number}</title>
+  <title>Order Confirmation ${formatOrderNum(order.order_number)}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; padding: 24px 0;">
@@ -363,7 +372,7 @@ export function buildCustomerConfirmationEmailHtml(order: Order): string {
                 Thank You for Your Order, ${escapeHtml(order.customer_name)}!
               </h1>
               <p style="margin: 8px 0 0 0; font-size: 14px; color: #64748b; line-height: 1.5;">
-                We have received your commercial order <strong style="color: #0f172a;">#${order.order_number}</strong>. Our dispatch team is processing it for quick delivery.
+                We have received your commercial order <strong style="color: #0f172a;">${formatOrderNum(order.order_number)}</strong>. Our dispatch team is processing it for quick delivery.
               </p>
             </td>
           </tr>
@@ -374,7 +383,7 @@ export function buildCustomerConfirmationEmailHtml(order: Order): string {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px;">
                 <tr>
                   <td style="font-size: 13px; color: #64748b; padding-bottom: 6px;">Order Number:</td>
-                  <td align="right" style="font-size: 14px; font-weight: 800; color: #0f172a; padding-bottom: 6px;">#${order.order_number}</td>
+                  <td align="right" style="font-size: 14px; font-weight: 800; color: #0f172a; padding-bottom: 6px;">${formatOrderNum(order.order_number)}</td>
                 </tr>
                 <tr>
                   <td style="font-size: 13px; color: #64748b; padding-bottom: 6px;">Payment Method:</td>
@@ -498,7 +507,7 @@ export function buildCustomerConfirmationEmailText(order: Order): string {
 
   return `
 Thank you for your order, ${order.customer_name}!
-Order Confirmation: #${order.order_number}
+Order Confirmation: ${formatOrderNum(order.order_number)}
 ==========================================
 
 Your order has been received and logged in our system.
@@ -580,7 +589,7 @@ export function buildCustomerStatusUpdateEmailHtml(order: Order, newStatus: Orde
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order #${order.order_number} Status Update</title>
+  <title>Order ${formatOrderNum(order.order_number)} Status Update</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; padding: 24px 0;">
@@ -618,7 +627,7 @@ export function buildCustomerStatusUpdateEmailHtml(order: Order, newStatus: Orde
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
                 <tr>
                   <td style="font-size: 13px; color: #64748b; padding-bottom: 6px;">Order Number:</td>
-                  <td align="right" style="font-size: 14px; font-weight: 800; color: #0f172a; padding-bottom: 6px;">#${order.order_number}</td>
+                  <td align="right" style="font-size: 14px; font-weight: 800; color: #0f172a; padding-bottom: 6px;">${formatOrderNum(order.order_number)}</td>
                 </tr>
                 <tr>
                   <td style="font-size: 13px; color: #64748b; padding-bottom: 6px;">Recipient:</td>
@@ -667,7 +676,7 @@ export function buildCustomerStatusUpdateEmailHtml(order: Order, newStatus: Orde
 
 export function buildCustomerStatusUpdateEmailText(order: Order, newStatus: OrderStatus): string {
   return `
-Order #${order.order_number} Status Update
+Order ${formatOrderNum(order.order_number)} Status Update
 =========================================
 
 Hello ${order.customer_name},
@@ -675,7 +684,7 @@ Hello ${order.customer_name},
 Your order status has been updated to: ${formatStatusLabel(newStatus).toUpperCase()}
 
 Order Summary:
-- Order Number: #${order.order_number}
+- Order Number: ${formatOrderNum(order.order_number)}
 - Total: ${formatPKR(order.total_amount)}
 - Destination: ${order.shipping_address?.city || 'Pakistan'}
 
