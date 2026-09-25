@@ -1,0 +1,15 @@
+# robots.txt for https://electricpartsonline.com
+# Usman Traders - Commercial Equipment Parts Online
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /api/
+Disallow: /api/*
+
+# Crawl speed optimization
+Crawl-delay: 1
+
+# XML Sitemap
+Sitemap: https://electricpartsonline.com/sitemap.xml

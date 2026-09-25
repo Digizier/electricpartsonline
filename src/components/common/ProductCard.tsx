@@ -32,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
       >
         <img
           src={product.thumbnail_url || product.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80'}
-          alt={product.name}
+          alt={`${product.name} (Part #${product.part_number}) - Commercial Equipment Spare Part - Usman Traders Pakistan`}
           className="absolute inset-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />

@@ -134,7 +134,7 @@ export function HeroBanner() {
                 >
                   <img
                     src={slide.image_url}
-                    alt={slide.title || 'Usman Traders Commercial Parts'}
+                    alt={slide.title ? `${slide.title} - Usman Traders Commercial Kitchen & Equipment Parts Pakistan` : 'Usman Traders Commercial Kitchen & Equipment Parts Pakistan'}
                     className="w-full h-full object-cover object-center"
                     loading={idx === 0 ? 'eager' : 'lazy'}
                   />

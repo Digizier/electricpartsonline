@@ -103,7 +103,7 @@ export function CategoryGrid({
                     <div className="relative w-full pt-[75%] bg-white p-4 overflow-hidden">
                       <img
                         src={cat.image_url || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80'}
-                        alt={cat.name}
+                        alt={`${cat.name} - Commercial Kitchen & Equipment Spare Parts - Usman Traders`}
                         className="absolute inset-0 w-full h-full object-contain p-4 group-hover/card:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -187,7 +187,7 @@ export function CategoryGrid({
                                 <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                   <img
                                     src={prod.thumbnail_url || prod.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&q=80'}
-                                    alt={prod.name}
+                                    alt={`${prod.name} (Part #${prod.part_number}) - Usman Traders`}
                                     className="w-full h-full object-contain"
                                     loading="lazy"
                                   />

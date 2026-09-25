@@ -4,19 +4,65 @@ import { CartProvider } from '@/context/CartContext';
 import { StorefrontShell } from './StorefrontShell';
 
 export const metadata: Metadata = {
-  title: 'Quality Commercial Equipment Parts | Usman Traders / ElectricPartsOnline.com',
+  metadataBase: new URL('https://electricpartsonline.com'),
+  title: {
+    default: 'Commercial Equipment & Kitchen Parts in Pakistan | Usman Traders',
+    template: '%s | Usman Traders Pakistan',
+  },
   description:
-    'Electrical, Plumbing, Hardware & Kitchen Parts — your one-stop shop for commercial equipment fittings, fixtures, and genuine OEM supplies.',
+    'Genuine commercial kitchen equipment parts, deep fryer heating elements, thermostats, commercial gas valves & fittings in Pakistan. Fast delivery from Usman Traders. Helpline: 0321-8888872.',
   keywords: [
     'commercial kitchen parts',
     'fryer heating elements',
     'commercial gas valves',
     'ice machine control boards',
-    'water pumps',
+    'commercial oven thermostats',
+    'water dispenser pumps',
     'electrical contactors',
     'Usman Traders',
     'ElectricPartsOnline',
+    'commercial kitchen parts Pakistan',
+    'fryer parts Lahore',
+    'commercial spare parts Karachi',
   ],
+  alternates: {
+    canonical: 'https://electricpartsonline.com',
+  },
+  openGraph: {
+    title: 'Commercial Equipment & Kitchen Parts in Pakistan | Usman Traders',
+    description:
+      'Genuine commercial kitchen equipment parts, deep fryer heating elements, thermostats, commercial gas valves & fittings in Pakistan. Fast delivery from Usman Traders.',
+    url: 'https://electricpartsonline.com',
+    siteName: 'Usman Traders - ElectricPartsOnline',
+    images: [
+      {
+        url: '/icon.png',
+        width: 512,
+        height: 512,
+        alt: 'Usman Traders ElectricPartsOnline Logo',
+      },
+    ],
+    locale: 'en_PK',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Commercial Equipment & Kitchen Parts in Pakistan | Usman Traders',
+    description:
+      'Genuine commercial kitchen equipment parts, deep fryer heating elements, thermostats, commercial gas valves & fittings in Pakistan.',
+    images: ['/icon.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -25,6 +71,52 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
     apple: '/icon.png',
   },
+};
+
+const globalSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Store',
+      '@id': 'https://electricpartsonline.com/#store',
+      'name': 'Usman Traders - ElectricPartsOnline.com',
+      'alternateName': 'Usman Traders Commercial Parts',
+      'url': 'https://electricpartsonline.com',
+      'logo': 'https://electricpartsonline.com/icon.png',
+      'image': 'https://electricpartsonline.com/icon.png',
+      'description': 'Wholesale and retail supplier of genuine commercial equipment parts, kitchen appliance spares, heating elements, valves, thermostats, and controls in Pakistan.',
+      'telephone': '+92-321-8888872',
+      'priceRange': 'PKR',
+      'address': {
+        '@type': 'PostalAddress',
+        'addressLocality': 'Lahore',
+        'addressRegion': 'Punjab',
+        'addressCountry': 'PK',
+      },
+      'geo': {
+        '@type': 'GeoCoordinates',
+        'latitude': 31.5204,
+        'longitude': 74.3587,
+      },
+      'sameAs': [
+        'https://www.facebook.com/share/18dJmrRRcu/',
+        'https://www.instagram.com/usmantraders.electric',
+        'https://www.tiktok.com/@usmantraders_electric',
+        'https://maps.app.goo.gl/QA89GdbJBnTMPgou7',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://electricpartsonline.com/#website',
+      'url': 'https://electricpartsonline.com',
+      'name': 'ElectricPartsOnline - Usman Traders',
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': 'https://electricpartsonline.com/products/?search={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -36,6 +128,12 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(globalSchema),
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function() {

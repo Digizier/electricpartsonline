@@ -44,7 +44,7 @@ export function ImageGallery({ images, productName, isInStock = true }: ImageGal
           >
             <img
               src={img}
-              alt={`${productName} thumbnail ${idx + 1}`}
+              alt={`${productName} Commercial Equipment Part - View ${idx + 1}`}
               className="w-full h-full object-contain"
             />
           </button>
@@ -69,7 +69,7 @@ export function ImageGallery({ images, productName, isInStock = true }: ImageGal
         {/* Main Image */}
         <img
           src={activeImage}
-          alt={productName}
+          alt={`${productName} - Genuine Commercial Equipment Part - Usman Traders Pakistan`}
           className={`w-full max-h-[420px] object-contain transition-transform duration-200 ${
             isZoomed ? 'scale-150' : 'scale-100'
           }`}

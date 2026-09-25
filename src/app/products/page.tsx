@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { getProducts, getCategories, getBrands } from '@/lib/db';
 import { Product, Category, Brand, Subcategory } from '@/types';
 import { ProductCard } from '@/components/common/ProductCard';
+import { SEOHead } from '@/components/common/SEOHead';
 import { Filter, SlidersHorizontal, X, Search, RotateCcw } from 'lucide-react';
 
 function getSubcategoryAndDescendantIds(subId: string, categories: Category[]): Set<string> {
@@ -375,6 +376,26 @@ function ProductsCatalog() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <SEOHead
+        title={
+          activeCategoryObj
+            ? `${activeCategoryObj.name} - Commercial Equipment Parts | Usman Traders Pakistan`
+            : searchQuery
+            ? `Search: "${searchQuery}" | Commercial Parts Pakistan`
+            : 'Commercial Equipment Spare Parts Catalog | Usman Traders Pakistan'
+        }
+        description={
+          activeCategoryObj
+            ? `Buy genuine ${activeCategoryObj.name} spare parts and equipment fittings in Pakistan. Fast delivery from Usman Traders. Call/WhatsApp: 0321-8888872.`
+            : 'Explore full catalog of genuine commercial equipment replacement parts in Pakistan. Heating elements, gas valves, thermostats, pumps, hardware fittings from Usman Traders.'
+        }
+        canonical={
+          selectedCat
+            ? `https://electricpartsonline.com/products/?category=${encodeURIComponent(selectedCat)}`
+            : 'https://electricpartsonline.com/products/'
+        }
+        type="website"
+      />
       {/* Title & Count Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>

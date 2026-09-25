@@ -10,6 +10,7 @@ import { ProductInfo } from '@/components/product/ProductInfo';
 import { SpecsTabs } from '@/components/product/SpecsTabs';
 import { ValueAddSidebar } from '@/components/product/ValueAddSidebar';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
+import { SEOHead } from '@/components/common/SEOHead';
 import { ArrowLeft, Search } from 'lucide-react';
 
 function ProductDetailContent() {
@@ -111,8 +112,43 @@ function ProductDetailContent() {
   const brand = brands.find((b) => b.id === product.brand_id);
   const category = categories.find((c) => c.id === product.category_id);
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.images && product.images.length > 0 ? product.images : (product.thumbnail_url ? [product.thumbnail_url] : []),
+    description: product.description || `Genuine ${product.name} (Part #${product.part_number}) available at Usman Traders Pakistan. High-grade commercial replacement part.`,
+    sku: product.part_number,
+    mpn: product.part_number,
+    brand: {
+      '@type': 'Brand',
+      name: brand?.name || 'Commercial OEM',
+    },
+    category: category?.name || 'Commercial Equipment Parts',
+    offers: {
+      '@type': 'Offer',
+      url: `https://electricpartsonline.com/product/?slug=${product.slug}`,
+      priceCurrency: 'PKR',
+      price: product.price,
+      itemCondition: 'https://schema.org/NewCondition',
+      availability: 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'Usman Traders',
+      },
+    },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <SEOHead
+        title={`${product.name} (Part #${product.part_number}) | Usman Traders Pakistan`}
+        description={`Buy genuine ${product.name} (Part #${product.part_number}) in Pakistan from Usman Traders. Commercial parts, fast delivery, phone/WhatsApp: 0321-8888872.`}
+        canonical={`https://electricpartsonline.com/product/?slug=${product.slug}`}
+        image={product.thumbnail_url || product.images?.[0]}
+        type="product"
+        jsonLd={productJsonLd}
+      />
       {/* Top 3-Column Layout: Gallery (5 Cols) + Product Info (4 Cols) + Value Sidebar (3 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
         {/* Gallery */}
